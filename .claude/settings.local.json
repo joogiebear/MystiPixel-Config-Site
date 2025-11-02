@@ -7,7 +7,12 @@
       "Bash(dir:*)",
       "Bash(nul)",
       "Bash(findstr:*)",
-      "Bash(typesnext-auth.d.ts)"
+      "Bash(typesnext-auth.d.ts)",
+      "Bash(git add:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
