@@ -37,6 +37,7 @@ interface Tag {
   id: string
   name: string
   slug: string
+  usageCount?: number
 }
 
 interface GameMode {
@@ -316,7 +317,7 @@ export default function BrowsePage() {
               {/* Tags */}
               <div>
                 <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
-                  Tags
+                  Tags (sorted by popularity)
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
@@ -342,6 +343,11 @@ export default function BrowsePage() {
                         className="hidden"
                       />
                       {tag.name}
+                      {tag.usageCount !== undefined && tag.usageCount > 0 && (
+                        <span className={`ml-1.5 text-xs ${selectedTags.includes(tag.slug) ? 'opacity-80' : 'opacity-60'}`}>
+                          ({tag.usageCount})
+                        </span>
+                      )}
                     </label>
                   ))}
                 </div>

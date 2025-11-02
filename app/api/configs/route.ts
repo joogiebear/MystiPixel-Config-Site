@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
       content,
       categoryId,
       modLoader,
-      tagIds,
+      tags, // Array of tag names (strings)
       gameModeIds,
       minecraftVersionIds,
       isPremium,
@@ -251,6 +251,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Process tags - auto-create if they don't exist
+    const tagIds: string[] = [];
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      for (const tagName of tags) {
+        const trimmedName = tagName.trim();
+        if (!trimmedName) continue;
+
+        // Generate slug from name
+        const slug = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+
+        // Find or create tag
+        let tag = await prisma.tag.findUnique({ where: { slug } });
+
+        if (!tag) {
+          // Create new tag
+          tag = await prisma.tag.create({
+            data: {
+              name: trimmedName,
+              slug: slug
+            }
+          });
+        }
+
+        tagIds.push(tag.id);
+      }
+    }
+
     // Create config
     const config = await prisma.config.create({
       data: {
@@ -263,8 +290,8 @@ export async function POST(request: NextRequest) {
         price: isPremium ? price : null,
         fileUrl: fileUrl || null,
         authorId: userId,
-        tags: tagIds && tagIds.length > 0 ? {
-          connect: tagIds.map((id: string) => ({ id }))
+        tags: tagIds.length > 0 ? {
+          connect: tagIds.map((id) => ({ id }))
         } : undefined,
         gameModes: gameModeIds && gameModeIds.length > 0 ? {
           connect: gameModeIds.map((id: string) => ({ id }))

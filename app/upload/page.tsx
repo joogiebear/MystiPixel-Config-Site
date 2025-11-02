@@ -17,6 +17,7 @@ interface Tag {
   id: string
   name: string
   slug: string
+  usageCount?: number
 }
 
 interface GameMode {
@@ -53,7 +54,9 @@ export default function UploadPage() {
     content: '', // Additional notes/installation instructions
   })
 
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([]) // Array of tag names
+  const [tagInput, setTagInput] = useState('')
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
   const [selectedGameModeIds, setSelectedGameModeIds] = useState<string[]>([])
   const [selectedMinecraftVersionIds, setSelectedMinecraftVersionIds] = useState<string[]>([])
 
@@ -61,6 +64,37 @@ export default function UploadPage() {
   const [fileUrl, setFileUrl] = useState<string | null>(null)
 
   const modLoaders = ['FORGE', 'FABRIC', 'NEOFORGE', 'QUILT', 'VANILLA']
+
+  // Tag handling functions
+  const addTag = (tagName: string) => {
+    const trimmedTag = tagName.trim()
+    if (trimmedTag && !selectedTags.includes(trimmedTag)) {
+      setSelectedTags([...selectedTags, trimmedTag])
+    }
+    setTagInput('')
+    setShowTagSuggestions(false)
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove))
+  }
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      addTag(tagInput)
+    } else if (e.key === 'Backspace' && tagInput === '' && selectedTags.length > 0) {
+      removeTag(selectedTags[selectedTags.length - 1])
+    }
+  }
+
+  // Filter tag suggestions based on input
+  const tagSuggestions = tags
+    .filter(tag =>
+      tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
+      !selectedTags.includes(tag.name)
+    )
+    .slice(0, 5)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -158,7 +192,7 @@ export default function UploadPage() {
         content: formData.content,
         categoryId: formData.categoryId,
         modLoader: formData.modLoader,
-        tagIds: selectedTagIds,
+        tags: selectedTags, // Send tag names, API will auto-create if needed
         gameModeIds: selectedGameModeIds,
         minecraftVersionIds: selectedMinecraftVersionIds,
         isPremium: formData.isPremium,
@@ -382,42 +416,70 @@ export default function UploadPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                     Tags (Optional)
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.length === 0 ? (
-                      <p className="text-sm text-[var(--text-secondary)]">Loading tags...</p>
-                    ) : (
-                      tags.map((tag) => (
-                        <label
-                          key={tag.id}
-                          className={`cursor-pointer px-4 py-2 rounded-full border transition-all ${
-                            selectedTagIds.includes(tag.id)
-                              ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
-                              : 'bg-[var(--surface-light)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
-                          }`}
+                  <p className="text-xs text-[var(--text-muted)] mb-3">
+                    Type tags and press Enter or comma. Start typing for suggestions.
+                  </p>
+
+                  {/* Selected Tags */}
+                  {selectedTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {selectedTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--primary)] text-white rounded-full text-sm"
                         >
-                          <input
-                            type="checkbox"
-                            checked={selectedTagIds.includes(tag.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedTagIds([...selectedTagIds, tag.id])
-                              } else {
-                                setSelectedTagIds(selectedTagIds.filter(id => id !== tag.id))
-                              }
-                            }}
-                            className="hidden"
-                          />
-                          <span className="text-sm font-medium">{tag.name}</span>
-                        </label>
-                      ))
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tag Input with Autocomplete */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => {
+                        setTagInput(e.target.value)
+                        setShowTagSuggestions(e.target.value.length > 0)
+                      }}
+                      onKeyDown={handleTagInputKeyDown}
+                      onFocus={() => setShowTagSuggestions(tagInput.length > 0)}
+                      onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
+                      className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
+                      placeholder="e.g., Performance, PvP, Lightweight (press Enter or comma)"
+                    />
+
+                    {/* Autocomplete Suggestions */}
+                    {showTagSuggestions && tagSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {tagSuggestions.map((tag) => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => addTag(tag.name)}
+                            className="w-full text-left px-4 py-2 hover:bg-[var(--surface-light)] text-[var(--text-primary)] transition-colors"
+                          >
+                            {tag.name}
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  {selectedTagIds.length > 0 && (
+
+                  {selectedTags.length > 0 && (
                     <p className="text-sm text-[var(--text-secondary)] mt-2">
-                      {selectedTagIds.length} tag(s) selected
+                      {selectedTags.length} tag(s) added
                     </p>
                   )}
                 </div>
