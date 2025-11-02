@@ -226,7 +226,8 @@ export async function POST(request: NextRequest) {
       price,
       features,
       installation,
-      fileUrl
+      fileUrl,
+      imageUrl
     } = body;
 
     // Validation
@@ -289,6 +290,7 @@ export async function POST(request: NextRequest) {
         isPremium: isPremium || false,
         price: isPremium ? price : null,
         fileUrl: fileUrl || null,
+        imageUrl: imageUrl || null,
         authorId: userId,
         tags: tagIds.length > 0 ? {
           connect: tagIds.map((id) => ({ id }))

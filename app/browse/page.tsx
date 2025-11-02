@@ -10,6 +10,7 @@ interface Config {
   id: string
   title: string
   description: string
+  imageUrl: string | null
   author: {
     id: string
     name: string
@@ -455,9 +456,24 @@ export default function BrowsePage() {
               <Card
                 key={config.id}
                 hover
-                className="flex flex-col cursor-pointer"
+                className="flex flex-col cursor-pointer overflow-hidden"
                 onClick={() => router.push(`/config/${config.id}`)}
               >
+                {/* Config Image */}
+                {config.imageUrl ? (
+                  <div className="w-full h-48 mb-4 -mt-6 -mx-6 overflow-hidden">
+                    <img
+                      src={config.imageUrl}
+                      alt={config.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-48 mb-4 -mt-6 -mx-6 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--accent)]/20 flex items-center justify-center">
+                    <span className="text-6xl opacity-30">🖼️</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">

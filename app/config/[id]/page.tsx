@@ -13,6 +13,7 @@ interface ConfigData {
   title: string
   description: string
   content: string
+  imageUrl: string | null
   author: {
     id: string
     name: string
@@ -216,6 +217,18 @@ export default function ConfigDetailPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Hero Image */}
+      {config.imageUrl && (
+        <div className="w-full h-80 overflow-hidden relative">
+          <img
+            src={config.imageUrl}
+            alt={config.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] to-transparent"></div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}

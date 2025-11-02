@@ -62,6 +62,9 @@ export default function UploadPage() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileUrl, setFileUrl] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const modLoaders = ['FORGE', 'FABRIC', 'NEOFORGE', 'QUILT', 'VANILLA']
 
@@ -95,6 +98,35 @@ export default function UploadPage() {
       !selectedTags.includes(tag.name)
     )
     .slice(0, 5)
+
+  // Image upload handler
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size must be less than 5MB')
+        return
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload an image file')
+        return
+      }
+
+      setSelectedImage(file)
+      setError(null)
+
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -197,7 +229,8 @@ export default function UploadPage() {
         minecraftVersionIds: selectedMinecraftVersionIds,
         isPremium: formData.isPremium,
         price: formData.isPremium ? parseFloat(formData.price) : null,
-        fileUrl: fileUrl
+        fileUrl: fileUrl,
+        imageUrl: imagePreview // Base64 encoded image
       }
 
       const res = await fetch('/api/configs', {
@@ -482,6 +515,61 @@ export default function UploadPage() {
                       {selectedTags.length} tag(s) added
                     </p>
                   )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Image Upload */}
+            <Card>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Preview Image</h2>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
+                Add a preview image to make your config stand out! (Optional but recommended)
+              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                  Config Preview Image
+                </label>
+                <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  uploadingImage
+                    ? 'border-[var(--primary)] bg-[var(--primary)]/5'
+                    : 'border-[var(--border)] hover:border-[var(--primary)]'
+                }`}>
+                  <input
+                    type="file"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="image-upload"
+                    accept="image/*"
+                    disabled={uploadingImage}
+                  />
+                  <label htmlFor="image-upload" className={uploadingImage ? '' : 'cursor-pointer'}>
+                    {imagePreview ? (
+                      <div>
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="max-h-48 mx-auto rounded-lg mb-2"
+                        />
+                        <p className="text-[var(--text-primary)] font-medium mb-1">
+                          {selectedImage?.name} ({(selectedImage!.size / 1024).toFixed(1)} KB)
+                        </p>
+                        <p className="text-sm text-[var(--text-secondary)]">
+                          Click to change image
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="text-4xl mb-2">🖼️</div>
+                        <p className="text-[var(--text-primary)] font-medium mb-1">
+                          Click to upload preview image
+                        </p>
+                        <p className="text-sm text-[var(--text-secondary)]">
+                          PNG, JPG, GIF up to 5MB (Recommended: 1200x630px)
+                        </p>
+                      </div>
+                    )}
+                  </label>
                 </div>
               </div>
             </Card>
