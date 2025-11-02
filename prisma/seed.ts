@@ -62,16 +62,36 @@ async function main() {
 
   // Create sample tags
   const tags = await Promise.all([
-    prisma.tag.create({ data: { name: 'Performance' } }),
-    prisma.tag.create({ data: { name: 'FPS Boost' } }),
-    prisma.tag.create({ data: { name: 'Optimization' } }),
-    prisma.tag.create({ data: { name: 'Client-side' } }),
-    prisma.tag.create({ data: { name: 'Server-side' } }),
-    prisma.tag.create({ data: { name: 'PvP' } }),
-    prisma.tag.create({ data: { name: 'Shaders' } })
+    prisma.tag.create({ data: { name: 'Performance', slug: 'performance' } }),
+    prisma.tag.create({ data: { name: 'FPS Boost', slug: 'fps-boost' } }),
+    prisma.tag.create({ data: { name: 'Optimization', slug: 'optimization' } }),
+    prisma.tag.create({ data: { name: 'Client-side', slug: 'client-side' } }),
+    prisma.tag.create({ data: { name: 'Server-side', slug: 'server-side' } }),
+    prisma.tag.create({ data: { name: 'PvP', slug: 'pvp' } }),
+    prisma.tag.create({ data: { name: 'Shaders', slug: 'shaders' } })
   ])
 
   console.log('Created tags')
+
+  // Create sample game modes
+  const gameModes = await Promise.all([
+    prisma.gameMode.create({ data: { name: 'Survival', slug: 'survival', icon: '⛏️', description: 'Classic survival gameplay' } }),
+    prisma.gameMode.create({ data: { name: 'Creative', slug: 'creative', icon: '🎨', description: 'Unlimited building mode' } }),
+    prisma.gameMode.create({ data: { name: 'PvP', slug: 'pvp', icon: '⚔️', description: 'Player vs Player combat' } }),
+    prisma.gameMode.create({ data: { name: 'Skyblock', slug: 'skyblock', icon: '🏝️', description: 'Sky island survival' } })
+  ])
+
+  console.log('Created game modes')
+
+  // Create sample minecraft versions
+  const mcVersions = await Promise.all([
+    prisma.minecraftVersion.create({ data: { version: '1.20.4' } }),
+    prisma.minecraftVersion.create({ data: { version: '1.20.1' } }),
+    prisma.minecraftVersion.create({ data: { version: '1.19.4' } }),
+    prisma.minecraftVersion.create({ data: { version: '1.16.5' } })
+  ])
+
+  console.log('Created minecraft versions')
 
   // Create sample users
   const hashedPassword = await bcrypt.hash('password123', 12)
@@ -115,7 +135,6 @@ async function main() {
       content: 'Sample config content here...',
       categoryId: categories[0].id,
       modLoader: ModLoader.FORGE,
-      mcVersion: '1.20.1',
       isPremium: true,
       price: 4.99,
       downloads: 12500,
@@ -126,6 +145,16 @@ async function main() {
           { id: tags[0].id },
           { id: tags[1].id },
           { id: tags[2].id }
+        ]
+      },
+      minecraftVersions: {
+        connect: [
+          { id: mcVersions[1].id } // 1.20.1
+        ]
+      },
+      gameModes: {
+        connect: [
+          { id: gameModes[0].id } // Survival
         ]
       }
     }
@@ -138,7 +167,6 @@ async function main() {
       content: 'Sample server config...',
       categoryId: categories[1].id,
       modLoader: ModLoader.FABRIC,
-      mcVersion: '1.20.1',
       isPremium: false,
       downloads: 8200,
       views: 15000,
@@ -147,6 +175,16 @@ async function main() {
         connect: [
           { id: tags[2].id },
           { id: tags[4].id }
+        ]
+      },
+      minecraftVersions: {
+        connect: [
+          { id: mcVersions[1].id } // 1.20.1
+        ]
+      },
+      gameModes: {
+        connect: [
+          { id: gameModes[0].id } // Survival
         ]
       }
     }
@@ -159,7 +197,6 @@ async function main() {
       content: 'Sample low-end config...',
       categoryId: categories[0].id,
       modLoader: ModLoader.FORGE,
-      mcVersion: '1.19.4',
       isPremium: false,
       downloads: 15600,
       views: 30000,
@@ -168,6 +205,16 @@ async function main() {
         connect: [
           { id: tags[0].id },
           { id: tags[1].id }
+        ]
+      },
+      minecraftVersions: {
+        connect: [
+          { id: mcVersions[2].id } // 1.19.4
+        ]
+      },
+      gameModes: {
+        connect: [
+          { id: gameModes[0].id } // Survival
         ]
       }
     }
