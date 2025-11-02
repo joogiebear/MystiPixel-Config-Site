@@ -5,11 +5,11 @@ import { requireAuth } from '@/lib/auth-helpers';
 // DELETE - Delete a comment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string; commentId: string } }
+  { params }: { params: Promise<{ userId: string; commentId: string }> }
 ) {
   try {
     const userId = await requireAuth();
-    const commentId = params.commentId;
+    const { commentId } = await params;
 
     // Find the comment
     const comment = await prisma.profileComment.findUnique({

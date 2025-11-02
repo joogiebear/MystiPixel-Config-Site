@@ -5,10 +5,10 @@ import { requireAuth } from '@/lib/auth-helpers';
 // GET - Get all comments for a user's profile
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const userId = params.userId;
+    const { userId } = await params;
 
     const comments = await prisma.profileComment.findMany({
       where: { profileUserId: userId },
@@ -41,11 +41,11 @@ export async function GET(
 // POST - Create a new comment on a user's profile
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const authorId = await requireAuth();
-    const profileUserId = params.userId;
+    const { userId: profileUserId } = await params;
     const body = await request.json();
 
     const { content } = body;
