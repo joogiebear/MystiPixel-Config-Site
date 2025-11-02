@@ -3,6 +3,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { randomBytes } from 'crypto';
+import { requireAuth } from '@/lib/auth-helpers';
 
 // Maximum file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -12,9 +13,8 @@ const ALLOWED_EXTENSIONS = ['.zip', '.cfg', '.conf', '.json', '.toml', '.txt', '
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add authentication check
-    // const session = await getServerSession();
-    // if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Require authentication
+    await requireAuth();
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -74,6 +74,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error uploading file:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to upload file' },
       { status: 500 }

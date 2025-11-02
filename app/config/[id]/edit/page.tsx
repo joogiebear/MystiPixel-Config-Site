@@ -55,6 +55,10 @@ export default function EditConfigPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null)
   const [removeImage, setRemoveImage] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [fileUrl, setFileUrl] = useState<string | null>(null)
+  const [existingFileUrl, setExistingFileUrl] = useState<string | null>(null)
+  const [uploadingFile, setUploadingFile] = useState(false)
 
   // Available options
   const [categories, setCategories] = useState<Category[]>([])
@@ -113,6 +117,8 @@ export default function EditConfigPage() {
         setPrice(config.price?.toString() || '')
         setExistingImageUrl(config.imageUrl)
         setImagePreview(config.imageUrl)
+        setExistingFileUrl(config.fileUrl)
+        setFileUrl(config.fileUrl)
 
         // Set available options
         setCategories(categoriesData.categories || [])
@@ -163,6 +169,52 @@ export default function EditConfigPage() {
     setRemoveImage(true)
   }
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File size must be less than 10MB')
+        return
+      }
+
+      setSelectedFile(file)
+      setError(null)
+
+      // Auto-upload file
+      await uploadFile(file)
+    }
+  }
+
+  const uploadFile = async (file: File) => {
+    setUploadingFile(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to upload file')
+      }
+
+      const data = await res.json()
+      setFileUrl(data.fileUrl)
+    } catch (err: any) {
+      setError(err.message)
+      setSelectedFile(null)
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+
   const handleTagToggle = (tagName: string) => {
     if (selectedTags.includes(tagName)) {
       setSelectedTags(selectedTags.filter(t => t !== tagName))
@@ -199,7 +251,7 @@ export default function EditConfigPage() {
         isPremium,
         price: isPremium ? parseFloat(price) : null,
         imageUrl: removeImage ? null : (imagePreview || existingImageUrl),
-        fileUrl: undefined // Keep existing file
+        fileUrl: fileUrl || existingFileUrl // Use new file if uploaded, otherwise keep existing
       }
 
       const res = await fetch(`/api/configs/${params.id}`, {
@@ -370,6 +422,64 @@ export default function EditConfigPage() {
                 </label>
               </div>
             )}
+          </Card>
+
+          {/* File Upload */}
+          <Card>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Config File</h2>
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
+              Upload a new config file to replace the existing one (Optional)
+            </p>
+
+            {(fileUrl || existingFileUrl) && (
+              <div className="mb-4 p-4 bg-[var(--surface-light)] rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">📦</span>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
+                        {selectedFile ? selectedFile.name : 'Current file'}
+                      </p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'Uploaded'}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedFile && (
+                    <span className="text-xs text-green-500">✓ New file uploaded</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              uploadingFile
+                ? 'border-[var(--primary)] bg-[var(--primary)]/5'
+                : 'border-[var(--border)] hover:border-[var(--primary)]'
+            }`}>
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+                id="file-upload"
+                accept=".zip,.cfg,.conf,.json,.toml,.txt,.yml,.yaml"
+                disabled={uploadingFile}
+              />
+              <label htmlFor="file-upload" className="cursor-pointer">
+                {uploadingFile ? (
+                  <>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+                    <p className="text-[var(--text-primary)]">Uploading...</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-4xl mb-2">📁</div>
+                    <p className="text-[var(--text-secondary)] mb-2">Click to upload new config file</p>
+                    <p className="text-xs text-[var(--text-muted)]">.zip, .cfg, .json, .toml, etc. (max 10MB)</p>
+                  </>
+                )}
+              </label>
+            </div>
           </Card>
 
           {/* Minecraft Versions */}
