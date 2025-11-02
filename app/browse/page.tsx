@@ -145,10 +145,49 @@ export default function BrowsePage() {
 
   const modLoaders = ['All', 'Forge', 'Fabric', 'NeoForge', 'Quilt', 'Vanilla']
 
+  // Get top 10 popular tags
+  const popularTags = tags.slice(0, 10).filter(tag => tag.usageCount && tag.usageCount > 0)
+
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-8">Browse Configs</h1>
+
+        {/* Popular Tags */}
+        {popularTags.length > 0 && (
+          <div className="mb-8 p-6 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">🔥 Popular Tags</h2>
+              <p className="text-sm text-[var(--text-secondary)]">Click to filter</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {popularTags.map((tag, index) => (
+                <button
+                  key={tag.id}
+                  onClick={() => {
+                    if (selectedTags.includes(tag.slug)) {
+                      setSelectedTags(selectedTags.filter(slug => slug !== tag.slug))
+                    } else {
+                      setSelectedTags([...selectedTags, tag.slug])
+                      setShowAdvancedFilters(true)
+                    }
+                    setCurrentPage(1)
+                  }}
+                  className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                    selectedTags.includes(tag.slug)
+                      ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
+                      : 'bg-[var(--surface-light)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
+                  }`}
+                >
+                  {index === 0 && '👑'} {tag.name}
+                  <span className={`ml-2 text-xs ${selectedTags.includes(tag.slug) ? 'opacity-80' : 'opacity-60'}`}>
+                    {tag.usageCount}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Search and Filters */}
         <div className="mb-8 space-y-4">

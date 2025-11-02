@@ -34,8 +34,17 @@ interface ConfigData {
     name: string
     slug: string
   }>
+  gameModes: Array<{
+    id: string
+    name: string
+    slug: string
+    icon: string | null
+  }>
+  minecraftVersions: Array<{
+    id: string
+    version: string
+  }>
   modLoader: string
-  mcVersion: string
   isPremium: boolean
   price: number | null
   downloads: number
@@ -248,8 +257,19 @@ export default function ConfigDetailPage() {
 
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge variant="primary">{config.modLoader}</Badge>
-                <Badge variant="secondary">{config.mcVersion}</Badge>
                 <Badge>{config.category.name}</Badge>
+                {config.minecraftVersions.slice(0, 3).map((version) => (
+                  <Badge key={version.id} variant="secondary">{version.version}</Badge>
+                ))}
+                {config.minecraftVersions.length > 3 && (
+                  <Badge variant="secondary">+{config.minecraftVersions.length - 3} more</Badge>
+                )}
+                {config.gameModes.slice(0, 2).map((mode) => (
+                  <Badge key={mode.id} variant="accent">{mode.icon || ''} {mode.name}</Badge>
+                ))}
+                {config.gameModes.length > 2 && (
+                  <Badge variant="accent">+{config.gameModes.length - 2} more</Badge>
+                )}
               </div>
 
               <div className="flex items-center gap-6 text-[var(--text-secondary)]">
@@ -295,6 +315,31 @@ export default function ConfigDetailPage() {
                       <div className="flex flex-wrap gap-2">
                         {config.tags.map((tag) => (
                           <Badge key={tag.id}>{tag.name}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {config.gameModes.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">Game Modes</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {config.gameModes.map((mode) => (
+                          <Badge key={mode.id} variant="accent">
+                            {mode.icon && <span className="mr-1">{mode.icon}</span>}
+                            {mode.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {config.minecraftVersions.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">Supported Minecraft Versions</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {config.minecraftVersions.map((version) => (
+                          <Badge key={version.id} variant="secondary">{version.version}</Badge>
                         ))}
                       </div>
                     </div>
@@ -359,7 +404,7 @@ export default function ConfigDetailPage() {
                         </span>
                       </div>
                       <p className="text-[var(--text-secondary)]">
-                        Current version - {config.mcVersion}
+                        Current version - Supports {config.minecraftVersions.map(v => v.version).join(', ')}
                       </p>
                     </div>
                   </div>
@@ -493,10 +538,39 @@ export default function ConfigDetailPage() {
                     <span className="text-[var(--text-secondary)]">Mod Loader</span>
                     <span className="text-[var(--text-primary)] font-medium">{config.modLoader}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">MC Version</span>
-                    <span className="text-[var(--text-primary)] font-medium">{config.mcVersion}</span>
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-[var(--text-secondary)]">MC Versions</span>
+                      <span className="text-[var(--text-primary)] font-medium">{config.minecraftVersions.length}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {config.minecraftVersions.slice(0, 4).map((version) => (
+                        <span key={version.id} className="text-xs bg-[var(--surface-light)] px-2 py-0.5 rounded">
+                          {version.version}
+                        </span>
+                      ))}
+                      {config.minecraftVersions.length > 4 && (
+                        <span className="text-xs text-[var(--text-secondary)]">
+                          +{config.minecraftVersions.length - 4} more
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {config.gameModes.length > 0 && (
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-[var(--text-secondary)]">Game Modes</span>
+                        <span className="text-[var(--text-primary)] font-medium">{config.gameModes.length}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {config.gameModes.map((mode) => (
+                          <span key={mode.id} className="text-xs bg-[var(--surface-light)] px-2 py-0.5 rounded">
+                            {mode.icon} {mode.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-[var(--text-secondary)]">Downloads</span>
                     <span className="text-[var(--text-primary)] font-medium">{config.downloadCount.toLocaleString()}</span>
