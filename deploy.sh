@@ -60,6 +60,15 @@ echo -e "${GREEN}[1/15] Gathering configuration...${NC}"
 read -p "Enter your domain (e.g., confighub.com) or IP address: " DOMAIN
 read -p "Do you want to set up SSL with Let's Encrypt? (y/n): " SETUP_SSL
 
+# Get email for SSL if needed
+if [ "$SETUP_SSL" = "y" ]; then
+    read -p "Enter your email address for SSL certificate notifications: " SSL_EMAIL
+    while [[ ! "$SSL_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; do
+        echo -e "${RED}Invalid email format. Please try again.${NC}"
+        read -p "Enter your email address for SSL certificate notifications: " SSL_EMAIL
+    done
+fi
+
 # Generate secure database password
 DB_PASSWORD=$(openssl rand -base64 32)
 
@@ -245,8 +254,8 @@ if [ "$SETUP_SSL" = "y" ]; then
     echo -e "${YELLOW}Note: Make sure your domain points to this server's IP address!${NC}"
     read -p "Press Enter when ready to continue..."
 
-    certbot --nginx -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email || {
-        echo -e "${YELLOW}SSL setup failed. You can run 'certbot --nginx -d $DOMAIN' manually later.${NC}"
+    certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email $SSL_EMAIL || {
+        echo -e "${YELLOW}SSL setup failed. You can run 'certbot --nginx -d $DOMAIN --email $SSL_EMAIL' manually later.${NC}"
     }
 
     # Update NEXTAUTH_URL to use https

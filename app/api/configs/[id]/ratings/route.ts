@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 
 // GET all ratings for a config
 export async function GET(
@@ -61,14 +62,11 @@ export async function POST(
 ) {
   try {
     const { id } = params;
+
+    // Require authentication
+    const userId = await requireAuth();
+
     const body = await request.json();
-
-    // TODO: Add authentication
-    // const session = await getServerSession();
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
     const { rating, review } = body;
 
     // Validation
@@ -90,8 +88,6 @@ export async function POST(
         { status: 404 }
       );
     }
-
-    const userId = 'TEMP_USER_ID'; // TODO: Replace with session.user.id
 
     // Check if user already rated this config
     const existingRating = await prisma.rating.findUnique({
@@ -153,6 +149,15 @@ export async function POST(
 
   } catch (error) {
     console.error('Error creating/updating rating:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to save rating' },
       { status: 500 }
@@ -168,13 +173,8 @@ export async function DELETE(
   try {
     const { id } = params;
 
-    // TODO: Add authentication
-    // const session = await getServerSession();
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
-    const userId = 'TEMP_USER_ID'; // TODO: Replace with session.user.id
+    // Require authentication
+    const userId = await requireAuth();
 
     await prisma.rating.delete({
       where: {
@@ -189,6 +189,15 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Error deleting rating:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to delete rating' },
       { status: 500 }

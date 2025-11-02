@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { requireAuth } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -152,11 +153,10 @@ export async function GET(request: NextRequest) {
 // POST endpoint for creating new configs (from upload page)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Require authentication
+    const userId = await requireAuth();
 
-    // TODO: Add authentication check here
-    // const session = await getServerSession();
-    // if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await request.json();
 
     const {
       title,
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
         isPremium: isPremium || false,
         price: isPremium ? price : null,
         fileUrl: fileUrl || null,
-        authorId: 'TEMP_USER_ID', // TODO: Replace with actual user ID from session
+        authorId: userId,
         tags: tagIds ? {
           connect: tagIds.map((id: string) => ({ id }))
         } : undefined
@@ -222,6 +222,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error creating config:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to create config' },
       { status: 500 }

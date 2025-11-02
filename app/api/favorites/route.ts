@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 
 // GET user's favorites
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add authentication
-    // const session = await getServerSession();
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
-    const userId = 'TEMP_USER_ID'; // TODO: Replace with session.user.id
+    // Require authentication
+    const userId = await requireAuth();
 
     const favorites = await prisma.favorite.findMany({
       where: { userId },
@@ -56,6 +52,15 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching favorites:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to fetch favorites' },
       { status: 500 }
@@ -66,11 +71,8 @@ export async function GET(request: NextRequest) {
 // POST - Add to favorites
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add authentication
-    // const session = await getServerSession();
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Require authentication
+    const userId = await requireAuth();
 
     const body = await request.json();
     const { configId } = body;
@@ -93,8 +95,6 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
-
-    const userId = 'TEMP_USER_ID'; // TODO: Replace with session.user.id
 
     // Check if already favorited
     const existing = await prisma.favorite.findUnique({
@@ -139,6 +139,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error adding favorite:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to add favorite' },
       { status: 500 }
@@ -149,11 +158,8 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove from favorites
 export async function DELETE(request: NextRequest) {
   try {
-    // TODO: Add authentication
-    // const session = await getServerSession();
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Require authentication
+    const userId = await requireAuth();
 
     const searchParams = request.nextUrl.searchParams;
     const configId = searchParams.get('configId');
@@ -164,8 +170,6 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const userId = 'TEMP_USER_ID'; // TODO: Replace with session.user.id
 
     await prisma.favorite.delete({
       where: {
@@ -180,6 +184,15 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('Error removing favorite:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to remove favorite' },
       { status: 500 }

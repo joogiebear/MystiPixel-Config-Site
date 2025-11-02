@@ -1,17 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
 
-  // Mock user data
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+    }
+  }, [status, router])
+
+  // Show loading while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
+          <p className="mt-4 text-[var(--text-secondary)]">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render dashboard if not authenticated
+  if (!session) {
+    return null
+  }
+
+  // Mock user data (TODO: Replace with real user data from API)
   const user = {
-    name: 'ConfigMaster',
-    email: 'config@master.com',
+    name: session.user?.name || 'User',
+    email: session.user?.email || '',
     isPremium: true,
     joinDate: 'Jan 2024',
     totalConfigs: 12,

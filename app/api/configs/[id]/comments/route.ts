@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 
 // GET all comments for a config
 export async function GET(
@@ -62,14 +63,11 @@ export async function POST(
 ) {
   try {
     const { id } = params;
+
+    // Require authentication
+    const userId = await requireAuth();
+
     const body = await request.json();
-
-    // TODO: Add authentication
-    // const session = await getServerSession();
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
     const { content } = body;
 
     // Validation
@@ -99,8 +97,6 @@ export async function POST(
       );
     }
 
-    const userId = 'TEMP_USER_ID'; // TODO: Replace with session.user.id
-
     // Create comment
     const comment = await prisma.comment.create({
       data: {
@@ -123,6 +119,15 @@ export async function POST(
 
   } catch (error) {
     console.error('Error creating comment:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to create comment' },
       { status: 500 }

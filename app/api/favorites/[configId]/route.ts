@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUserId } from '@/lib/auth-helpers';
 
 // GET - Check if config is favorited
 export async function GET(
@@ -9,13 +10,16 @@ export async function GET(
   try {
     const { configId } = params;
 
-    // TODO: Add authentication
-    // const session = await getServerSession();
-    // if (!session) {
-    //   return NextResponse.json({ isFavorited: false });
-    // }
+    // Get user ID (optional - returns null if not authenticated)
+    const userId = await getCurrentUserId();
 
-    const userId = 'TEMP_USER_ID'; // TODO: Replace with session.user.id
+    // If not authenticated, return not favorited
+    if (!userId) {
+      return NextResponse.json({
+        isFavorited: false,
+        favoriteId: null
+      });
+    }
 
     const favorite = await prisma.favorite.findUnique({
       where: {
