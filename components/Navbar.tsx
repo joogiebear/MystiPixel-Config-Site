@@ -37,12 +37,16 @@ export default function Navbar() {
 
           {/* Right side buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              Sign In
-            </Button>
-            <Button variant="primary" size="sm">
-              Get Started
-            </Button>
+            <Link href="/auth/signin">
+              <Button variant="ghost" size="sm">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/auth/signup">
+              <Button variant="primary" size="sm">
+                Get Started
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -78,12 +82,16 @@ export default function Navbar() {
               Docs
             </Link>
             <div className="px-3 py-2 space-y-2">
-              <Button variant="ghost" size="sm" className="w-full">
-                Sign In
-              </Button>
-              <Button variant="primary" size="sm" className="w-full">
-                Get Started
-              </Button>
+              <Link href="/auth/signin" className="block">
+                <Button variant="ghost" size="sm" className="w-full">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/auth/signup" className="block">
+                <Button variant="primary" size="sm" className="w-full">
+                  Get Started
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

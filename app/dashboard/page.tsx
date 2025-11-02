@@ -11,6 +11,41 @@ export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
+  const [configs, setConfigs] = useState([
+    {
+      id: 1,
+      title: 'Ultimate Performance Pack',
+      downloads: 12500,
+      rating: 4.9,
+      status: 'published',
+      isPremium: true,
+      price: 4.99,
+      earnings: 6250,
+      sales: 1250
+    },
+    {
+      id: 2,
+      title: 'Server Optimization Bundle',
+      downloads: 8200,
+      rating: 4.8,
+      status: 'published',
+      isPremium: false,
+      price: 0,
+      earnings: 0,
+      sales: 0
+    },
+    {
+      id: 3,
+      title: 'New Config Draft',
+      downloads: 0,
+      rating: 0,
+      status: 'draft',
+      isPremium: true,
+      price: 3.99,
+      earnings: 0,
+      sales: 0
+    }
+  ])
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -48,41 +83,24 @@ export default function DashboardPage() {
     followers: 1250
   }
 
-  const myConfigs = [
-    {
-      id: 1,
-      title: 'Ultimate Performance Pack',
-      downloads: 12500,
-      rating: 4.9,
-      status: 'published',
-      isPremium: true,
-      price: 4.99,
-      earnings: 6250,
-      sales: 1250
-    },
-    {
-      id: 2,
-      title: 'Server Optimization Bundle',
-      downloads: 8200,
-      rating: 4.8,
-      status: 'published',
-      isPremium: false,
-      price: 0,
-      earnings: 0,
-      sales: 0
-    },
-    {
-      id: 3,
-      title: 'New Config Draft',
-      downloads: 0,
-      rating: 0,
-      status: 'draft',
-      isPremium: true,
-      price: 3.99,
-      earnings: 0,
-      sales: 0
+  // Handle delete config
+  const handleDelete = async (configId: number) => {
+    if (!confirm('Are you sure you want to delete this config?')) {
+      return
     }
-  ]
+
+    // TODO: Replace with actual API call
+    // const response = await fetch(`/api/configs/${configId}`, { method: 'DELETE' })
+
+    // For now, just remove from local state
+    setConfigs(configs.filter(c => c.id !== configId))
+  }
+
+  // Handle edit config
+  const handleEdit = (configId: number) => {
+    // TODO: Navigate to edit page
+    router.push(`/config/${configId}/edit`)
+  }
 
   const recentActivity = [
     { type: 'sale', message: 'Someone purchased Ultimate Performance Pack', time: '2 hours ago', amount: 4.99 },
@@ -120,7 +138,7 @@ export default function DashboardPage() {
             <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-2">Dashboard</h1>
             <p className="text-[var(--text-secondary)]">Welcome back, {user.name}!</p>
           </div>
-          <Button variant="primary">
+          <Button variant="primary" onClick={() => router.push('/upload')}>
             Upload New Config
           </Button>
         </div>
@@ -242,11 +260,11 @@ export default function DashboardPage() {
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-[var(--text-primary)]">My Configs</h2>
-              <Button variant="primary">Upload New Config</Button>
+              <Button variant="primary" onClick={() => router.push('/upload')}>Upload New Config</Button>
             </div>
 
             <div className="space-y-4">
-              {myConfigs.map((config) => (
+              {configs.map((config) => (
                 <Card key={config.id} className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -286,8 +304,8 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Edit</Button>
-                    <Button variant="ghost" size="sm">Delete</Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(config.id)}>Edit</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(config.id)}>Delete</Button>
                   </div>
                 </Card>
               ))}
