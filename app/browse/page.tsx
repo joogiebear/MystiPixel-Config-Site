@@ -492,21 +492,21 @@ export default function BrowsePage() {
 
                 <div className="flex flex-wrap gap-2 mb-4">
                   <Badge variant="primary">{config.modLoader}</Badge>
-                  {config.minecraftVersions.slice(0, 2).map((version) => (
+                  {config.minecraftVersions && config.minecraftVersions.slice(0, 2).map((version) => (
                     <Badge key={version.id} variant="secondary">{version.version}</Badge>
                   ))}
-                  {config.minecraftVersions.length > 2 && (
+                  {config.minecraftVersions && config.minecraftVersions.length > 2 && (
                     <Badge variant="secondary">+{config.minecraftVersions.length - 2}</Badge>
                   )}
-                  {config.gameModes.slice(0, 2).map((mode) => (
+                  {config.gameModes && config.gameModes.slice(0, 2).map((mode) => (
                     <Badge key={mode.id} variant="accent">{mode.icon || ''} {mode.name}</Badge>
                   ))}
-                  {config.gameModes.length > 2 && (
+                  {config.gameModes && config.gameModes.length > 2 && (
                     <Badge variant="accent">+{config.gameModes.length - 2}</Badge>
                   )}
                 </div>
 
-                {config.tags.length > 0 && (
+                {config.tags && config.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {config.tags.slice(0, 3).map((tag) => (
                       <span key={tag.id} className="text-xs px-2 py-1 bg-[var(--surface-light)] text-[var(--text-secondary)] rounded">
