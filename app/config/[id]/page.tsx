@@ -98,6 +98,7 @@ export default function ConfigDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [isFavorited, setIsFavorited] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [canEdit, setCanEdit] = useState(false)
 
   // Fetch config data
   useEffect(() => {
@@ -129,6 +130,34 @@ export default function ConfigDetailPage() {
       .then(data => setIsFavorited(data.isFavorited))
       .catch(err => console.error('Failed to check favorite:', err))
   }, [session, params.id])
+
+  // Check if user can edit (is author or admin)
+  useEffect(() => {
+    if (!session || !config) return
+
+    const checkEditPermission = async () => {
+      // Check if user is the author
+      if (config.author.id === session.user?.id) {
+        setCanEdit(true)
+        return
+      }
+
+      // Check if user is admin
+      try {
+        const res = await fetch('/api/user/profile')
+        if (res.ok) {
+          const userData = await res.json()
+          if (userData.isAdmin) {
+            setCanEdit(true)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check admin status:', err)
+      }
+    }
+
+    checkEditPermission()
+  }, [session, config])
 
   const handleDownload = async () => {
     if (!config) return
@@ -532,6 +561,17 @@ export default function ConfigDetailPage() {
                 >
                   {downloading ? 'Downloading...' : config.isPremium ? 'Purchase Config' : 'Download Free'}
                 </Button>
+
+                {canEdit && (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => router.push(`/config/${config.id}/edit`)}
+                  >
+                    ✏️ Edit Config
+                  </Button>
+                )}
 
                 <Button
                   variant="outline"

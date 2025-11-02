@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
+import { getServerSession } from 'next-auth';
 
 // GET single config by ID
 export async function GET(
@@ -133,18 +135,141 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+
+    // Require authentication
+    const userId = await requireAuth();
+
     const body = await request.json();
 
-    // TODO: Add authentication and authorization check
-    // Make sure the user owns this config
+    const {
+      title,
+      description,
+      content,
+      categoryId,
+      modLoader,
+      tags, // Array of tag names (strings)
+      gameModeIds,
+      minecraftVersionIds,
+      isPremium,
+      price,
+      imageUrl,
+      fileUrl
+    } = body;
 
+    // Check if config exists and user owns it (or is admin)
+    const existingConfig = await prisma.config.findUnique({
+      where: { id },
+      include: { author: true }
+    });
+
+    if (!existingConfig) {
+      return NextResponse.json(
+        { error: 'Config not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check authorization (must be author or admin)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isAdmin: true }
+    });
+
+    if (existingConfig.authorId !== userId && !user?.isAdmin) {
+      return NextResponse.json(
+        { error: 'You do not have permission to edit this config' },
+        { status: 403 }
+      );
+    }
+
+    // Validation
+    if (!title || !description || !categoryId || !modLoader) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    if (!minecraftVersionIds || minecraftVersionIds.length === 0) {
+      return NextResponse.json(
+        { error: 'Please select at least one Minecraft version' },
+        { status: 400 }
+      );
+    }
+
+    if (isPremium && (!price || price < 0.99)) {
+      return NextResponse.json(
+        { error: 'Premium configs must have a price of at least $0.99' },
+        { status: 400 }
+      );
+    }
+
+    // Process tags - auto-create if they don't exist
+    const tagIds: string[] = [];
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      for (const tagName of tags) {
+        const trimmedName = tagName.trim();
+        if (!trimmedName) continue;
+
+        // Generate slug from name
+        const slug = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+
+        // Find or create tag
+        let tag = await prisma.tag.findUnique({ where: { slug } });
+
+        if (!tag) {
+          // Create new tag
+          tag = await prisma.tag.create({
+            data: {
+              name: trimmedName,
+              slug: slug
+            }
+          });
+        }
+
+        tagIds.push(tag.id);
+      }
+    }
+
+    // Update config with all relations
     const config = await prisma.config.update({
       where: { id },
-      data: body,
+      data: {
+        title,
+        description,
+        content: content || '',
+        categoryId,
+        modLoader,
+        isPremium: isPremium || false,
+        price: isPremium ? price : null,
+        imageUrl: imageUrl !== undefined ? imageUrl : existingConfig.imageUrl,
+        fileUrl: fileUrl !== undefined ? fileUrl : existingConfig.fileUrl,
+        // Disconnect all and reconnect with new ones
+        tags: {
+          set: [], // Clear existing
+          connect: tagIds.length > 0 ? tagIds.map((id) => ({ id })) : []
+        },
+        gameModes: {
+          set: [], // Clear existing
+          connect: gameModeIds && gameModeIds.length > 0 ? gameModeIds.map((id: string) => ({ id })) : []
+        },
+        minecraftVersions: {
+          set: [], // Clear existing
+          connect: minecraftVersionIds.map((id: string) => ({ id }))
+        }
+      },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            image: true
+          }
+        },
         category: true,
-        tags: true
+        tags: true,
+        gameModes: true,
+        minecraftVersions: true
       }
     });
 
@@ -152,6 +277,15 @@ export async function PATCH(
 
   } catch (error) {
     console.error('Error updating config:', error);
+
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to update config' },
       { status: 500 }
