@@ -79,11 +79,11 @@ if [ "$SETUP_SSL" = "y" ]; then
     done
 fi
 
-# Generate secure database password
-DB_PASSWORD=$(openssl rand -base64 32)
+# Generate secure database password (URL-safe, alphanumeric only)
+DB_PASSWORD=$(openssl rand -hex 16)
 
-# Generate NextAuth secret
-NEXTAUTH_SECRET=$(openssl rand -base64 32)
+# Generate NextAuth secret (URL-safe, alphanumeric only)
+NEXTAUTH_SECRET=$(openssl rand -hex 32)
 
 echo ""
 echo -e "${GREEN}[2/15] Updating system packages...${NC}"
