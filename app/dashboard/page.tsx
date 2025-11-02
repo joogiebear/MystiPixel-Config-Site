@@ -460,7 +460,7 @@ export default function DashboardPage() {
                 {/* Upload Controls */}
                 <div className="flex-1">
                   <div className="flex gap-3">
-                    <label className="cursor-pointer">
+                    <label className={`cursor-pointer font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center px-3 py-1.5 text-sm bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white ${uploadingAvatar ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <input
                         type="file"
                         accept="image/*"
@@ -468,9 +468,7 @@ export default function DashboardPage() {
                         className="hidden"
                         disabled={uploadingAvatar}
                       />
-                      <Button variant="primary" size="sm" as="span" disabled={uploadingAvatar}>
-                        {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
-                      </Button>
+                      {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
                     </label>
                     {avatarPreview && (
                       <Button
