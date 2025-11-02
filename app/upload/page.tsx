@@ -13,10 +13,32 @@ interface Category {
   slug: string
 }
 
+interface Tag {
+  id: string
+  name: string
+  slug: string
+}
+
+interface GameMode {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+  description: string | null
+}
+
+interface MinecraftVersion {
+  id: string
+  version: string
+}
+
 export default function UploadPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const [categories, setCategories] = useState<Category[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
+  const [gameModes, setGameModes] = useState<GameMode[]>([])
+  const [minecraftVersions, setMinecraftVersions] = useState<MinecraftVersion[]>([])
   const [loading, setLoading] = useState(false)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,11 +48,14 @@ export default function UploadPage() {
     description: '',
     categoryId: '',
     modLoader: '',
-    mcVersion: '',
     isPremium: false,
     price: '',
     content: '', // Additional notes/installation instructions
   })
+
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const [selectedGameModeIds, setSelectedGameModeIds] = useState<string[]>([])
+  const [selectedMinecraftVersionIds, setSelectedMinecraftVersionIds] = useState<string[]>([])
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileUrl, setFileUrl] = useState<string | null>(null)
@@ -44,12 +69,21 @@ export default function UploadPage() {
     }
   }, [status, router])
 
-  // Fetch categories
+  // Fetch categories, tags, game modes, and minecraft versions
   useEffect(() => {
-    fetch('/api/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data.categories || []))
-      .catch(err => console.error('Failed to load categories:', err))
+    Promise.all([
+      fetch('/api/categories').then(res => res.json()),
+      fetch('/api/tags').then(res => res.json()),
+      fetch('/api/game-modes').then(res => res.json()),
+      fetch('/api/minecraft-versions').then(res => res.json())
+    ])
+      .then(([categoriesData, tagsData, gameModesData, versionsData]) => {
+        setCategories(categoriesData.categories || [])
+        setTags(tagsData.tags || [])
+        setGameModes(gameModesData.gameModes || [])
+        setMinecraftVersions(versionsData.versions || [])
+      })
+      .catch(err => console.error('Failed to load data:', err))
   }, [])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,6 +143,10 @@ export default function UploadPage() {
         throw new Error('Please upload a config file')
       }
 
+      if (selectedMinecraftVersionIds.length === 0) {
+        throw new Error('Please select at least one Minecraft version')
+      }
+
       if (formData.isPremium && (!formData.price || parseFloat(formData.price) < 0.99)) {
         throw new Error('Premium configs must have a price of at least $0.99')
       }
@@ -120,7 +158,9 @@ export default function UploadPage() {
         content: formData.content,
         categoryId: formData.categoryId,
         modLoader: formData.modLoader,
-        mcVersion: formData.mcVersion,
+        tagIds: selectedTagIds,
+        gameModeIds: selectedGameModeIds,
+        minecraftVersionIds: selectedMinecraftVersionIds,
         isPremium: formData.isPremium,
         price: formData.isPremium ? parseFloat(formData.price) : null,
         fileUrl: fileUrl
@@ -260,17 +300,126 @@ export default function UploadPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-                    Minecraft Version *
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
+                    Minecraft Versions * (Select all that apply)
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.mcVersion}
-                    onChange={(e) => setFormData({ ...formData, mcVersion: e.target.value })}
-                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
-                    placeholder="e.g., 1.20.1"
-                  />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto p-3 bg-[var(--surface-light)] border border-[var(--border)] rounded-lg">
+                    {minecraftVersions.length === 0 ? (
+                      <p className="text-sm text-[var(--text-secondary)] col-span-full">Loading versions...</p>
+                    ) : (
+                      minecraftVersions.map((version) => (
+                        <label
+                          key={version.id}
+                          className="flex items-center gap-2 cursor-pointer hover:bg-[var(--surface)] p-2 rounded transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedMinecraftVersionIds.includes(version.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedMinecraftVersionIds([...selectedMinecraftVersionIds, version.id])
+                              } else {
+                                setSelectedMinecraftVersionIds(selectedMinecraftVersionIds.filter(id => id !== version.id))
+                              }
+                            }}
+                            className="w-4 h-4 bg-[var(--surface-light)] border border-[var(--border)] rounded focus:ring-2 focus:ring-[var(--primary)]"
+                          />
+                          <span className="text-sm text-[var(--text-primary)]">{version.version}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  {selectedMinecraftVersionIds.length > 0 && (
+                    <p className="text-sm text-[var(--text-secondary)] mt-2">
+                      {selectedMinecraftVersionIds.length} version(s) selected
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
+                    Game Modes (Optional)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {gameModes.length === 0 ? (
+                      <p className="text-sm text-[var(--text-secondary)]">Loading game modes...</p>
+                    ) : (
+                      gameModes.map((mode) => (
+                        <label
+                          key={mode.id}
+                          className="flex items-center gap-3 cursor-pointer hover:bg-[var(--surface-light)] p-3 rounded-lg border border-[var(--border)] transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedGameModeIds.includes(mode.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedGameModeIds([...selectedGameModeIds, mode.id])
+                              } else {
+                                setSelectedGameModeIds(selectedGameModeIds.filter(id => id !== mode.id))
+                              }
+                            }}
+                            className="w-4 h-4 bg-[var(--surface-light)] border border-[var(--border)] rounded focus:ring-2 focus:ring-[var(--primary)]"
+                          />
+                          <div className="flex items-center gap-2 flex-1">
+                            {mode.icon && <span className="text-xl">{mode.icon}</span>}
+                            <div>
+                              <span className="text-sm font-medium text-[var(--text-primary)]">{mode.name}</span>
+                              {mode.description && (
+                                <p className="text-xs text-[var(--text-secondary)]">{mode.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  {selectedGameModeIds.length > 0 && (
+                    <p className="text-sm text-[var(--text-secondary)] mt-2">
+                      {selectedGameModeIds.length} game mode(s) selected
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
+                    Tags (Optional)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.length === 0 ? (
+                      <p className="text-sm text-[var(--text-secondary)]">Loading tags...</p>
+                    ) : (
+                      tags.map((tag) => (
+                        <label
+                          key={tag.id}
+                          className={`cursor-pointer px-4 py-2 rounded-full border transition-all ${
+                            selectedTagIds.includes(tag.id)
+                              ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
+                              : 'bg-[var(--surface-light)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedTagIds.includes(tag.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedTagIds([...selectedTagIds, tag.id])
+                              } else {
+                                setSelectedTagIds(selectedTagIds.filter(id => id !== tag.id))
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          <span className="text-sm font-medium">{tag.name}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  {selectedTagIds.length > 0 && (
+                    <p className="text-sm text-[var(--text-secondary)] mt-2">
+                      {selectedTagIds.length} tag(s) selected
+                    </p>
+                  )}
                 </div>
               </div>
             </Card>
