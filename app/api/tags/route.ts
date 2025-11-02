@@ -1,33 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// GET - Get all tags (public)
 export async function GET(request: NextRequest) {
   try {
     const tags = await prisma.tag.findMany({
-      include: {
-        _count: {
-          select: {
-            configs: true
-          }
-        }
+      select: {
+        id: true,
+        name: true,
+        slug: true
       },
-      orderBy: {
-        name: 'asc'
-      }
+      orderBy: { name: 'asc' }
     });
 
-    return NextResponse.json({
-      tags: tags.map(tag => ({
-        ...tag,
-        configCount: tag._count.configs
-      }))
-    });
+    return NextResponse.json({ tags });
 
   } catch (error) {
     console.error('Error fetching tags:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch tags' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch tags' }, { status: 500 });
   }
 }

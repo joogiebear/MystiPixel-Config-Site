@@ -94,7 +94,22 @@ export async function GET(request: NextRequest) {
           tags: {
             select: {
               id: true,
-              name: true
+              name: true,
+              slug: true
+            }
+          },
+          gameModes: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              icon: true
+            }
+          },
+          minecraftVersions: {
+            select: {
+              id: true,
+              version: true
             }
           },
           ratings: {
@@ -168,8 +183,9 @@ export async function POST(request: NextRequest) {
       content,
       categoryId,
       modLoader,
-      mcVersion,
       tagIds,
+      gameModeIds,
+      minecraftVersionIds,
       isPremium,
       price,
       features,
@@ -181,6 +197,13 @@ export async function POST(request: NextRequest) {
     if (!title || !description || !categoryId || !modLoader) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    if (!minecraftVersionIds || minecraftVersionIds.length === 0) {
+      return NextResponse.json(
+        { error: 'Please select at least one Minecraft version' },
         { status: 400 }
       );
     }
@@ -200,14 +223,19 @@ export async function POST(request: NextRequest) {
         content: content || '',
         categoryId,
         modLoader,
-        mcVersion: mcVersion || 'Any',
         isPremium: isPremium || false,
         price: isPremium ? price : null,
         fileUrl: fileUrl || null,
         authorId: userId,
-        tags: tagIds ? {
+        tags: tagIds && tagIds.length > 0 ? {
           connect: tagIds.map((id: string) => ({ id }))
-        } : undefined
+        } : undefined,
+        gameModes: gameModeIds && gameModeIds.length > 0 ? {
+          connect: gameModeIds.map((id: string) => ({ id }))
+        } : undefined,
+        minecraftVersions: {
+          connect: minecraftVersionIds.map((id: string) => ({ id }))
+        }
       },
       include: {
         author: {
@@ -218,7 +246,9 @@ export async function POST(request: NextRequest) {
           }
         },
         category: true,
-        tags: true
+        tags: true,
+        gameModes: true,
+        minecraftVersions: true
       }
     });
 
