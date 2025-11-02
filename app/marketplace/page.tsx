@@ -1,55 +1,73 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 
+interface PremiumConfig {
+  id: string
+  title: string
+  author: {
+    id: string
+    name: string
+  }
+  price: number
+  downloads: number
+  averageRating: number
+  category: {
+    name: string
+  }
+}
+
+interface MarketplaceStats {
+  totalPremiumCreators: number
+  totalCreatorEarnings: number
+  totalPremiumSales: number
+  averagePremiumRating: number
+}
+
 export default function MarketplacePage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('featured')
+  const [premiumConfigs, setPremiumConfigs] = useState<PremiumConfig[]>([])
+  const [stats, setStats] = useState<MarketplaceStats>({
+    totalPremiumCreators: 0,
+    totalCreatorEarnings: 0,
+    totalPremiumSales: 0,
+    averagePremiumRating: 0
+  })
+  const [loading, setLoading] = useState(true)
 
-  const premiumConfigs = [
-    {
-      id: 1,
-      title: 'Ultimate Performance Pack',
-      author: 'ConfigMaster',
-      price: 4.99,
-      sales: 1250,
-      rating: 4.9,
-      revenue: 6250,
-      thumbnail: '⚡',
-      category: 'Performance'
-    },
-    {
-      id: 2,
-      title: 'PvP Pro Settings',
-      author: 'CompetitiveGamer',
-      price: 2.99,
-      sales: 980,
-      rating: 4.7,
-      revenue: 2930,
-      thumbnail: '⚔️',
-      category: 'PvP'
-    },
-    {
-      id: 3,
-      title: 'Modpack Builder Base',
-      author: 'PackCreator',
-      price: 5.99,
-      sales: 730,
-      rating: 4.6,
-      revenue: 4372,
-      thumbnail: '📦',
-      category: 'Modpacks'
+  useEffect(() => {
+    const fetchMarketplaceData = async () => {
+      try {
+        // Fetch premium configs
+        const configRes = await fetch('/api/configs?isPremium=true&limit=10&sort=popular')
+        const configData = await configRes.json()
+        setPremiumConfigs(configData.configs || [])
+
+        // Fetch marketplace stats
+        const statsRes = await fetch('/api/stats')
+        const statsData = await statsRes.json()
+        if (statsData.stats) {
+          setStats({
+            totalPremiumCreators: statsData.stats.premiumCreators || 0,
+            totalCreatorEarnings: statsData.stats.totalEarnings || 0,
+            totalPremiumSales: statsData.stats.totalPremiumDownloads || 0,
+            averagePremiumRating: statsData.stats.averagePremiumRating || 0
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching marketplace data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
-  const topCreators = [
-    { name: 'ConfigMaster', earnings: '$12,450', sales: 2480, rank: 1 },
-    { name: 'ServerPro', earnings: '$8,920', sales: 1784, rank: 2 },
-    { name: 'PackCreator', earnings: '$6,340', sales: 1268, rank: 3 },
-    { name: 'BudgetGamer', earnings: '$5,120', sales: 1024, rank: 4 }
-  ]
+    fetchMarketplaceData()
+  }, [])
 
   return (
     <div className="min-h-screen">
@@ -68,22 +86,30 @@ export default function MarketplacePage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           <Card className="text-center">
             <div className="text-3xl mb-2">💎</div>
-            <div className="text-2xl font-bold text-[var(--primary)] mb-1">850+</div>
+            <div className="text-2xl font-bold text-[var(--primary)] mb-1">
+              {loading ? '...' : stats.totalPremiumCreators || '0'}
+            </div>
             <div className="text-sm text-[var(--text-secondary)]">Premium Creators</div>
           </Card>
           <Card className="text-center">
             <div className="text-3xl mb-2">📈</div>
-            <div className="text-2xl font-bold text-[var(--primary)] mb-1">$125K</div>
+            <div className="text-2xl font-bold text-[var(--primary)] mb-1">
+              {loading ? '...' : `$${(stats.totalCreatorEarnings || 0).toLocaleString()}`}
+            </div>
             <div className="text-sm text-[var(--text-secondary)]">Creator Earnings</div>
           </Card>
           <Card className="text-center">
             <div className="text-3xl mb-2">🛒</div>
-            <div className="text-2xl font-bold text-[var(--primary)] mb-1">45K+</div>
+            <div className="text-2xl font-bold text-[var(--primary)] mb-1">
+              {loading ? '...' : (stats.totalPremiumSales || 0).toLocaleString()}
+            </div>
             <div className="text-sm text-[var(--text-secondary)]">Premium Sales</div>
           </Card>
           <Card className="text-center">
             <div className="text-3xl mb-2">⭐</div>
-            <div className="text-2xl font-bold text-[var(--primary)] mb-1">4.8</div>
+            <div className="text-2xl font-bold text-[var(--primary)] mb-1">
+              {loading ? '...' : (stats.averagePremiumRating || 0).toFixed(1)}
+            </div>
             <div className="text-sm text-[var(--text-secondary)]">Average Rating</div>
           </Card>
         </div>
@@ -112,45 +138,72 @@ export default function MarketplacePage() {
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Premium Configs</h2>
 
-            <div className="space-y-4">
-              {premiumConfigs.map((config) => (
-                <Card key={config.id} hover className="flex items-start gap-6">
-                  <div className="text-6xl">{config.thumbnail}</div>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+                <p className="text-[var(--text-secondary)]">Loading premium configs...</p>
+              </div>
+            ) : premiumConfigs.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">💎</div>
+                <p className="text-[var(--text-secondary)] mb-4">No premium configs yet</p>
+                <p className="text-sm text-[var(--text-muted)]">Be the first to create a premium config!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {premiumConfigs.map((config) => (
+                  <Card
+                    key={config.id}
+                    hover
+                    className="flex items-start gap-6 cursor-pointer"
+                    onClick={() => router.push(`/config/${config.id}`)}
+                  >
+                    <div className="text-6xl">💎</div>
 
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-1">
-                          {config.title}
-                        </h3>
-                        <p className="text-sm text-[var(--text-secondary)]">by {config.author}</p>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-1">
+                            {config.title}
+                          </h3>
+                          <p className="text-sm text-[var(--text-secondary)]">by {config.author.name}</p>
+                        </div>
+                        <Badge variant="accent" className="text-lg px-3 py-1">
+                          ${config.price?.toFixed(2)}
+                        </Badge>
                       </div>
-                      <Badge variant="accent" className="text-lg px-3 py-1">
-                        ${config.price}
-                      </Badge>
-                    </div>
 
-                    <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)] mb-4">
-                      <span>⭐ {config.rating}</span>
-                      <span>•</span>
-                      <span>{config.sales} sales</span>
-                      <span>•</span>
-                      <span>{config.category}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm">
-                        <span className="text-[var(--text-secondary)]">Total Revenue: </span>
-                        <span className="text-[var(--accent)] font-semibold">${config.revenue.toLocaleString()}</span>
+                      <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)] mb-4">
+                        <span>⭐ {config.averageRating > 0 ? config.averageRating.toFixed(1) : 'N/A'}</span>
+                        <span>•</span>
+                        <span>{config.downloads} downloads</span>
+                        <span>•</span>
+                        <span>{config.category.name}</span>
                       </div>
-                      <Button variant="primary" size="sm">
-                        View Details
-                      </Button>
+
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm">
+                          <span className="text-[var(--text-secondary)]">Total Revenue: </span>
+                          <span className="text-[var(--accent)] font-semibold">
+                            ${((config.price || 0) * config.downloads).toLocaleString()}
+                          </span>
+                        </div>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            router.push(`/config/${config.id}`)
+                          }}
+                        >
+                          View Details
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -181,26 +234,9 @@ export default function MarketplacePage() {
             <Card>
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-4">Top Creators</h3>
 
-              <div className="space-y-3">
-                {topCreators.map((creator) => (
-                  <div
-                    key={creator.name}
-                    className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-bold text-sm">
-                        {creator.rank}
-                      </div>
-                      <div>
-                        <p className="font-medium text-[var(--text-primary)]">{creator.name}</p>
-                        <p className="text-xs text-[var(--text-secondary)]">{creator.sales} sales</p>
-                      </div>
-                    </div>
-                    <div className="text-[var(--accent)] font-semibold">
-                      {creator.earnings}
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center py-8 text-[var(--text-secondary)]">
+                <div className="text-4xl mb-2">🏆</div>
+                <p className="text-sm">Leaderboard coming soon!</p>
               </div>
             </Card>
           </div>

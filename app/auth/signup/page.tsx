@@ -66,7 +66,7 @@ export default function SignUpPage() {
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Create Account</h1>
-          <p className="text-[var(--text-secondary)]">Join the ConfigHub community</p>
+          <p className="text-[var(--text-secondary)]">Join the MystiPixel community</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

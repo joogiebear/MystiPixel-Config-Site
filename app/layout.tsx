@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ConfigHub - Minecraft Configuration Repository",
+  title: "MystiPixel - Minecraft Configuration Repository",
   description: "Discover, share, and monetize Minecraft configurations. From performance tweaks to complete modpack setups.",
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid md:grid-cols-4 gap-8">
               <div>
-                <h3 className="font-bold text-[var(--text-primary)] mb-4">ConfigHub</h3>
+                <h3 className="font-bold text-[var(--text-primary)] mb-4">MystiPixel</h3>
                 <p className="text-sm text-[var(--text-secondary)]">
                   The ultimate Minecraft configuration repository and marketplace.
                 </p>
@@ -69,7 +69,7 @@ export default function RootLayout({
               </div>
             </div>
             <div className="border-t border-[var(--border)] mt-8 pt-8 text-center text-sm text-[var(--text-secondary)]">
-              <p>&copy; 2025 ConfigHub. All rights reserved.</p>
+              <p>&copy; 2025 MystiPixel. All rights reserved.</p>
             </div>
           </div>
         </footer>

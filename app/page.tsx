@@ -86,8 +86,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold text-[var(--text-primary)] mb-6">
-              Minecraft Config
-              <span className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent"> Hub</span>
+              <span className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent">MystiPixel</span>
             </h1>
             <p className="text-xl text-[var(--text-secondary)] mb-8 max-w-2xl mx-auto">
               Discover, share, and monetize Minecraft configurations. From performance tweaks to complete modpack setups.

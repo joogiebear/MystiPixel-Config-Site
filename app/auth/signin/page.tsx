@@ -45,7 +45,7 @@ export default function SignInPage() {
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Welcome Back</h1>
-          <p className="text-[var(--text-secondary)]">Sign in to your ConfigHub account</p>
+          <p className="text-[var(--text-secondary)]">Sign in to your MystiPixel account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

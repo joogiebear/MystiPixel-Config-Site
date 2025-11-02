@@ -34,7 +34,7 @@ export default function Navbar() {
             <div className="w-8 h-8 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">M</span>
             </div>
-            <span className="text-xl font-bold text-[var(--text-primary)]">ConfigHub</span>
+            <span className="text-xl font-bold text-[var(--text-primary)]">MystiPixel</span>
           </Link>
 
           {/* Desktop Navigation */}
