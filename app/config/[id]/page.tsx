@@ -541,7 +541,7 @@ export default function ConfigDetailPage() {
                           <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                             Your Rating *
                           </label>
-                          <div className="flex gap-1">
+                          <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button
                                 key={star}
@@ -549,7 +549,7 @@ export default function ConfigDetailPage() {
                                 onClick={() => setUserRating(star)}
                                 onMouseEnter={() => setHoverRating(star)}
                                 onMouseLeave={() => setHoverRating(0)}
-                                className="text-4xl transition-all hover:scale-110 focus:outline-none"
+                                className="text-4xl transition-opacity hover:opacity-80 focus:outline-none cursor-pointer"
                                 disabled={submittingRating}
                               >
                                 {(hoverRating || userRating) >= star ? '⭐' : '☆'}
