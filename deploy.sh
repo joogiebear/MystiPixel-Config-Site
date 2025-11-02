@@ -128,11 +128,15 @@ echo ""
 echo -e "${GREEN}[5/15] Setting up database...${NC}"
 # Create database and user
 mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
-mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
+
+# Try to create user, or update password if exists
+mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';" 2>/dev/null || \
+mysql -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
+
 mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
 echo -e "${GREEN}Database created: ${DB_NAME}${NC}"
-echo -e "${GREEN}Database user created: ${DB_USER}${NC}"
+echo -e "${GREEN}Database user configured: ${DB_USER}${NC}"
 
 echo ""
 echo -e "${GREEN}[6/15] Installing PM2 process manager...${NC}"
@@ -227,12 +231,24 @@ sudo -u $ACTUAL_USER pm2 delete $APP_NAME 2>/dev/null || true
 sudo -u $ACTUAL_USER pm2 start npm --name $APP_NAME -- start
 sudo -u $ACTUAL_USER pm2 save
 
-# Setup PM2 startup script
-STARTUP_CMD=$(sudo -u $ACTUAL_USER pm2 startup systemd -u $ACTUAL_USER --hp $USER_HOME | grep "sudo")
-if [ -n "$STARTUP_CMD" ]; then
-    eval $STARTUP_CMD
+# Wait a moment for the app to start
+sleep 3
+
+# Verify app is running
+if sudo -u $ACTUAL_USER pm2 list | grep -q "$APP_NAME.*online"; then
+    echo -e "${GREEN}Application is running successfully!${NC}"
 else
-    echo -e "${YELLOW}Warning: Could not configure PM2 auto-startup. You can set it up manually later.${NC}"
+    echo -e "${RED}Warning: Application may not have started correctly${NC}"
+    echo -e "${YELLOW}Check logs with: pm2 logs $APP_NAME${NC}"
+fi
+
+# Setup PM2 startup script (don't fail if this errors)
+STARTUP_CMD=$(sudo -u $ACTUAL_USER pm2 startup systemd -u $ACTUAL_USER --hp $USER_HOME 2>/dev/null | grep "sudo env" || true)
+if [ -n "$STARTUP_CMD" ]; then
+    eval $STARTUP_CMD 2>/dev/null || echo -e "${YELLOW}PM2 startup partially configured${NC}"
+    echo -e "${GREEN}PM2 auto-startup configured${NC}"
+else
+    echo -e "${YELLOW}Note: PM2 auto-startup not configured. Run 'pm2 startup' manually if needed.${NC}"
 fi
 
 echo ""
@@ -277,7 +293,12 @@ sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" /etc/nginx/sites-available/$APP_NAME
 ln -sf /etc/nginx/sites-available/$APP_NAME /etc/nginx/sites-enabled/
 
 # Test nginx config
-nginx -t
+if nginx -t; then
+    echo -e "${GREEN}nginx configuration is valid${NC}"
+else
+    echo -e "${RED}nginx configuration test failed. Please check the config.${NC}"
+    exit 1
+fi
 
 # Reload nginx
 systemctl reload nginx
@@ -289,16 +310,21 @@ if [ "$SETUP_SSL" = "y" ]; then
 
     apt install -y certbot python3-certbot-nginx
 
-    echo -e "${YELLOW}Note: Make sure your domain points to this server's IP address!${NC}"
-    read -p "Press Enter when ready to continue..."
+    echo -e "${YELLOW}Attempting SSL certificate setup...${NC}"
+    echo -e "${YELLOW}Make sure your domain ${DOMAIN} points to this server's IP!${NC}"
 
-    certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email $SSL_EMAIL || {
-        echo -e "${YELLOW}SSL setup failed. You can run 'certbot --nginx -d $DOMAIN --email $SSL_EMAIL' manually later.${NC}"
-    }
-
-    # Update NEXTAUTH_URL to use https
-    sed -i "s|NEXTAUTH_URL=\"http://|NEXTAUTH_URL=\"https://|g" $APP_DIR/.env
-    sudo -u $ACTUAL_USER pm2 restart $APP_NAME
+    if certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email $SSL_EMAIL; then
+        echo -e "${GREEN}SSL certificate installed successfully!${NC}"
+        # Update NEXTAUTH_URL to use https
+        sed -i "s|NEXTAUTH_URL=\"http://|NEXTAUTH_URL=\"https://|g" $APP_DIR/.env
+        sudo -u $ACTUAL_USER pm2 restart $APP_NAME || true
+    else
+        echo -e "${YELLOW}SSL setup failed. This is usually because:${NC}"
+        echo -e "${YELLOW}  - Domain doesn't point to this server yet${NC}"
+        echo -e "${YELLOW}  - DNS hasn't propagated${NC}"
+        echo -e "${YELLOW}You can set up SSL manually later with:${NC}"
+        echo -e "${YELLOW}  sudo certbot --nginx -d $DOMAIN --email $SSL_EMAIL${NC}"
+    fi
 fi
 
 # Set proper permissions
