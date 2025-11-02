@@ -100,6 +100,13 @@ export default function ConfigDetailPage() {
   const [downloading, setDownloading] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
 
+  // Rating form state
+  const [userRating, setUserRating] = useState<number>(0)
+  const [hoverRating, setHoverRating] = useState<number>(0)
+  const [reviewText, setReviewText] = useState('')
+  const [submittingRating, setSubmittingRating] = useState(false)
+  const [userExistingRating, setUserExistingRating] = useState<any>(null)
+
   // Fetch config data
   useEffect(() => {
     const fetchConfig = async () => {
@@ -159,6 +166,26 @@ export default function ConfigDetailPage() {
     checkEditPermission()
   }, [session, config])
 
+  // Check if user has already rated this config
+  useEffect(() => {
+    if (!session || !config) return
+
+    const checkExistingRating = async () => {
+      try {
+        const existingRating = config.ratings.find((r: any) => r.user.id === session.user?.id)
+        if (existingRating) {
+          setUserExistingRating(existingRating)
+          setUserRating(existingRating.rating)
+          setReviewText(existingRating.review || '')
+        }
+      } catch (err) {
+        console.error('Failed to check existing rating:', err)
+      }
+    }
+
+    checkExistingRating()
+  }, [session, config])
+
   const handleDownload = async () => {
     if (!config) return
 
@@ -216,6 +243,50 @@ export default function ConfigDetailPage() {
       }
     } catch (err) {
       alert('Failed to update favorites')
+    }
+  }
+
+  const handleSubmitRating = async () => {
+    if (!session) {
+      router.push('/auth/signin')
+      return
+    }
+
+    if (userRating === 0) {
+      alert('Please select a star rating')
+      return
+    }
+
+    setSubmittingRating(true)
+
+    try {
+      const res = await fetch(`/api/configs/${params.id}/ratings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: userRating,
+          review: reviewText.trim() || null
+        })
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to submit rating')
+      }
+
+      // Refresh config to show updated rating
+      const configRes = await fetch(`/api/configs/${params.id}`)
+      if (configRes.ok) {
+        const data = await configRes.json()
+        setConfig(data)
+        setUserExistingRating(data.ratings.find((r: any) => r.user.id === session.user?.id))
+      }
+
+      alert(userExistingRating ? 'Rating updated successfully!' : 'Rating submitted successfully!')
+    } catch (err: any) {
+      alert(err.message || 'Failed to submit rating')
+    } finally {
+      setSubmittingRating(false)
     }
   }
 
@@ -457,6 +528,85 @@ export default function ConfigDetailPage() {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Reviews</h2>
+
+                    {/* Rating Submission Form */}
+                    {session && (
+                      <div className="mb-6 p-6 bg-[var(--surface-light)] border border-[var(--border)] rounded-lg">
+                        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                          {userExistingRating ? 'Update Your Review' : 'Write a Review'}
+                        </h3>
+
+                        {/* Star Rating Selector */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            Your Rating *
+                          </label>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setUserRating(star)}
+                                onMouseEnter={() => setHoverRating(star)}
+                                onMouseLeave={() => setHoverRating(0)}
+                                className="text-4xl transition-all hover:scale-110 focus:outline-none"
+                                disabled={submittingRating}
+                              >
+                                {(hoverRating || userRating) >= star ? '⭐' : '☆'}
+                              </button>
+                            ))}
+                            {userRating > 0 && (
+                              <span className="ml-3 text-sm text-[var(--text-secondary)] self-center">
+                                {userRating} {userRating === 1 ? 'star' : 'stars'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Review Text */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            Review (Optional)
+                          </label>
+                          <textarea
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            rows={4}
+                            className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
+                            placeholder="Share your thoughts about this config..."
+                            disabled={submittingRating}
+                          />
+                        </div>
+
+                        {/* Submit Button */}
+                        <Button
+                          variant="primary"
+                          onClick={handleSubmitRating}
+                          disabled={submittingRating || userRating === 0}
+                        >
+                          {submittingRating ? 'Submitting...' : userExistingRating ? 'Update Review' : 'Submit Review'}
+                        </Button>
+
+                        {userExistingRating && (
+                          <p className="mt-2 text-xs text-[var(--text-secondary)]">
+                            You reviewed this config {formatDistanceToNow(new Date(userExistingRating.createdAt), { addSuffix: true })}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {!session && (
+                      <div className="mb-6 p-4 bg-[var(--surface-light)] border border-[var(--border)] rounded-lg text-center">
+                        <p className="text-[var(--text-secondary)] mb-3">Sign in to leave a review</p>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => router.push('/auth/signin')}
+                        >
+                          Sign In
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Rating Distribution */}
                     {config.totalRatings > 0 && (
