@@ -18,15 +18,7 @@ SSH into your VPS:
 ssh root@your-server-ip
 ```
 
-### 2. Update Repository URL
-
-Before running the script, update the `REPO_URL` in `deploy.sh`:
-```bash
-nano deploy.sh
-# Change: REPO_URL="https://github.com/YOUR_USERNAME/YOUR_REPO.git"
-```
-
-### 3. Run Deployment Script
+### 2. Run Deployment Script
 
 ```bash
 chmod +x deploy.sh

@@ -31,7 +31,7 @@ NC='\033[0m' # No Color
 # Configuration
 APP_NAME="confighub"
 APP_DIR="/var/www/confighub"
-REPO_URL="https://github.com/YOUR_USERNAME/YOUR_REPO.git"  # UPDATE THIS
+REPO_URL="https://github.com/joogiebear/MystiPixel-Config-Site.git"
 NODE_VERSION="20"
 DOMAIN=""  # Will be prompted
 DB_NAME="confighub_db"

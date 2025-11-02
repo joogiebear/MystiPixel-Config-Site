@@ -51,10 +51,10 @@ Deploy in 5 minutes with our automated script:
 ssh root@your-server-ip
 
 # Clone this repo
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/joogiebear/MystiPixel-Config-Site.git
+cd MystiPixel-Config-Site
 
-# Update REPO_URL in deploy.sh, then run:
+# Run deployment script:
 chmod +x deploy.sh
 sudo ./deploy.sh
 \`\`\`

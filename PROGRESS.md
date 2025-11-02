@@ -355,25 +355,18 @@ All Prisma models with relationships:
 ```bash
 # Commit all changes
 git add .
-git commit -m "Initial ConfigHub deployment"
+git commit -m "Initial MystiPixel Config Site deployment"
 git push origin main
 ```
 
-2. **Update deploy.sh:**
-```bash
-# Edit deploy.sh
-nano deploy.sh
-# Change: REPO_URL="https://github.com/YOUR_USERNAME/YOUR_REPO.git"
-```
-
-3. **Deploy to VPS:**
+2. **Deploy to VPS:**
 ```bash
 # SSH into your VPS
 ssh root@your-server-ip
 
 # Clone and deploy
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/joogiebear/MystiPixel-Config-Site.git
+cd MystiPixel-Config-Site
 chmod +x deploy.sh
 sudo ./deploy.sh
 ```
