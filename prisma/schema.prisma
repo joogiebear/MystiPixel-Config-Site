@@ -26,6 +26,8 @@ model User {
   comments      Comment[]
   downloads     Download[]
   favorites     Favorite[]
+  profileCommentsReceived ProfileComment[] @relation("ProfileComments")
+  profileCommentsWritten  ProfileComment[] @relation("CommentAuthor")
 }
 
 model Account {
@@ -135,6 +137,19 @@ model Comment {
   createdAt DateTime @default(now())
 
   @@index([configId])
+}
+
+model ProfileComment {
+  id            String   @id @default(cuid())
+  content       String
+  author        User     @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId      String
+  profileUser   User     @relation("ProfileComments", fields: [profileUserId], references: [id], onDelete: Cascade)
+  profileUserId String
+  createdAt     DateTime @default(now())
+
+  @@index([profileUserId])
+  @@index([authorId])
 }
 
 model Download {
