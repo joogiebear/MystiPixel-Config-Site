@@ -6,20 +6,30 @@
 # This script automates the complete deployment of ConfigHub on Ubuntu 20.04+
 #
 # What it does:
-# - Installs Node.js 20 LTS, MySQL, nginx, PM2
-# - Sets up the database
-# - Configures environment variables
+# - Installs Node.js 20 LTS, MariaDB, nginx, PM2
+# - Sets up the database with secure credentials
+# - Pulls code from GitHub
+# - Configures environment variables automatically
 # - Builds and deploys the application
-# - Sets up PM2 process manager
+# - Sets up PM2 process manager with auto-restart
 # - Configures nginx reverse proxy
-# - Optional: Sets up SSL with Let's Encrypt
+# - Optional: Sets up SSL with Let's Encrypt (requires email)
 #
 # Usage:
 #   chmod +x deploy.sh
 #   sudo ./deploy.sh
+#
+# Requirements:
+# - Ubuntu 20.04+ VPS (2GB RAM minimum)
+# - Root or sudo access
+# - Domain name (optional, but required for SSL)
 ################################################################################
 
 set -e  # Exit on any error
+
+# Error handling
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+trap 'echo -e "${RED}\"${last_command}\" command failed with exit code $?.${NC}"' ERR
 
 # Colors for output
 RED='\033[0;31m'
@@ -90,20 +100,39 @@ echo "Node version: $(node -v)"
 echo "NPM version: $(npm -v)"
 
 echo ""
-echo -e "${GREEN}[4/15] Installing MySQL...${NC}"
+echo -e "${GREEN}[4/15] Installing MariaDB...${NC}"
 if ! command -v mysql &> /dev/null; then
-    apt install -y mysql-server
-    systemctl start mysql
-    systemctl enable mysql
+    # Set non-interactive mode for MariaDB installation
+    export DEBIAN_FRONTEND=noninteractive
+
+    # Install MariaDB server
+    apt install -y mariadb-server mariadb-client
+
+    # Start and enable MariaDB
+    systemctl start mariadb
+    systemctl enable mariadb
+
+    # Secure MariaDB installation (automated)
+    mysql -e "DELETE FROM mysql.user WHERE User='';"
+    mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+    mysql -e "DROP DATABASE IF EXISTS test;"
+    mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+    mysql -e "FLUSH PRIVILEGES;"
+
+    echo -e "${GREEN}MariaDB installed and secured${NC}"
+else
+    echo -e "${GREEN}MariaDB already installed${NC}"
 fi
 
 echo ""
-echo -e "${GREEN}[5/15] Setting up MySQL database...${NC}"
+echo -e "${GREEN}[5/15] Setting up database...${NC}"
+# Create database and user
 mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
 mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
 mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
 echo -e "${GREEN}Database created: ${DB_NAME}${NC}"
+echo -e "${GREEN}Database user created: ${DB_USER}${NC}"
 
 echo ""
 echo -e "${GREEN}[6/15] Installing PM2 process manager...${NC}"
@@ -267,37 +296,68 @@ fi
 chown -R $ACTUAL_USER:$ACTUAL_USER $APP_DIR
 
 echo ""
-echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║     Deployment Complete! 🎉            ║${NC}"
-echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║                                                            ║${NC}"
+echo -e "${GREEN}║          🎉  DEPLOYMENT COMPLETE!  🎉                      ║${NC}"
+echo -e "${GREEN}║                                                            ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}Application Details:${NC}"
-echo -e "  • URL: ${GREEN}http://${DOMAIN}${NC}"
-echo -e "  • App Directory: ${GREEN}${APP_DIR}${NC}"
-echo -e "  • Database: ${GREEN}${DB_NAME}${NC}"
-echo -e "  • Database User: ${GREEN}${DB_USER}${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}                 APPLICATION INFORMATION${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo -e "${BLUE}Important Credentials (SAVE THESE):${NC}"
-echo -e "  • Database Password: ${RED}${DB_PASSWORD}${NC}"
-echo -e "  • NextAuth Secret: ${RED}${NEXTAUTH_SECRET}${NC}"
+if [ "$SETUP_SSL" = "y" ]; then
+    echo -e "  🌐 Site URL:          ${GREEN}https://${DOMAIN}${NC}"
+else
+    echo -e "  🌐 Site URL:          ${GREEN}http://${DOMAIN}${NC}"
+fi
+echo -e "  📁 App Directory:     ${GREEN}${APP_DIR}${NC}"
+echo -e "  🗄️  Database:          ${GREEN}${DB_NAME}${NC}"
+echo -e "  👤 Database User:     ${GREEN}${DB_USER}${NC}"
 echo ""
-echo -e "${BLUE}Useful Commands:${NC}"
-echo -e "  • View logs: ${YELLOW}pm2 logs ${APP_NAME}${NC}"
-echo -e "  • Restart app: ${YELLOW}pm2 restart ${APP_NAME}${NC}"
-echo -e "  • Stop app: ${YELLOW}pm2 stop ${APP_NAME}${NC}"
-echo -e "  • Check status: ${YELLOW}pm2 status${NC}"
-echo -e "  • Update app: ${YELLOW}cd ${APP_DIR} && git pull && npm install && npm run build && pm2 restart ${APP_NAME}${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${RED}           ⚠️  IMPORTANT - SAVE THESE CREDENTIALS  ⚠️${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo -e "${BLUE}Next Steps:${NC}"
-echo -e "  1. Visit your site at http://${DOMAIN}"
-echo -e "  2. Create an account"
-echo -e "  3. Start uploading configs!"
+echo -e "  🔑 Database Password: ${RED}${DB_PASSWORD}${NC}"
+echo -e "  🔐 NextAuth Secret:   ${RED}${NEXTAUTH_SECRET}${NC}"
+echo ""
+echo -e "  💾 Credentials saved to: ${YELLOW}/root/confighub-credentials.txt${NC}"
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}                  MANAGEMENT COMMANDS${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "  📊 View logs:         ${YELLOW}pm2 logs ${APP_NAME}${NC}"
+echo -e "  🔄 Restart app:       ${YELLOW}pm2 restart ${APP_NAME}${NC}"
+echo -e "  🛑 Stop app:          ${YELLOW}pm2 stop ${APP_NAME}${NC}"
+echo -e "  ✅ Check status:      ${YELLOW}pm2 status${NC}"
+echo -e "  🚀 Update app:        ${YELLOW}cd ${APP_DIR} && ./update.sh${NC}"
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}                      NEXT STEPS${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+if [ "$SETUP_SSL" = "y" ]; then
+    echo -e "  1️⃣  Visit ${GREEN}https://${DOMAIN}${NC}"
+else
+    echo -e "  1️⃣  Visit ${GREEN}http://${DOMAIN}${NC}"
+fi
+echo -e "  2️⃣  Sign up at ${YELLOW}/auth/signup${NC}"
+echo -e "  3️⃣  Access dashboard at ${YELLOW}/dashboard${NC}"
+echo -e "  4️⃣  Upload your first config at ${YELLOW}/upload${NC}"
+echo -e "  5️⃣  Browse configs at ${YELLOW}/browse${NC}"
 echo ""
 if [ "$SETUP_SSL" != "y" ]; then
-    echo -e "${YELLOW}Don't forget to set up SSL later with: certbot --nginx -d ${DOMAIN}${NC}"
+    echo -e "${YELLOW}⚠️  SSL not configured. Set up later with:${NC}"
+    echo -e "    ${YELLOW}sudo certbot --nginx -d ${DOMAIN} --email your@email.com${NC}"
     echo ""
 fi
-echo -e "${GREEN}Enjoy your ConfigHub instance! 🎮⚙️${NC}"
+echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║                                                            ║${NC}"
+echo -e "${GREEN}║     Enjoy your ConfigHub instance! 🎮⚙️                     ║${NC}"
+echo -e "${GREEN}║                                                            ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
 # Save credentials to file
