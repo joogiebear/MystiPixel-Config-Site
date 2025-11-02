@@ -19,6 +19,9 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const authorId = searchParams.get('authorId');
     const sort = searchParams.get('sort') || 'recent';
+    const tags = searchParams.get('tags'); // Comma-separated tag slugs
+    const gameModes = searchParams.get('gameModes'); // Comma-separated game mode slugs
+    const minecraftVersions = searchParams.get('minecraftVersions'); // Comma-separated version IDs
 
     // Build where clause
     const where: Prisma.ConfigWhereInput = {};
@@ -46,6 +49,39 @@ export async function GET(request: NextRequest) {
         { title: { contains: search } },
         { description: { contains: search } }
       ];
+    }
+
+    if (tags) {
+      const tagSlugs = tags.split(',').filter(Boolean);
+      if (tagSlugs.length > 0) {
+        where.tags = {
+          some: {
+            slug: { in: tagSlugs }
+          }
+        };
+      }
+    }
+
+    if (gameModes) {
+      const gameModeSlugs = gameModes.split(',').filter(Boolean);
+      if (gameModeSlugs.length > 0) {
+        where.gameModes = {
+          some: {
+            slug: { in: gameModeSlugs }
+          }
+        };
+      }
+    }
+
+    if (minecraftVersions) {
+      const versionIds = minecraftVersions.split(',').filter(Boolean);
+      if (versionIds.length > 0) {
+        where.minecraftVersions = {
+          some: {
+            id: { in: versionIds }
+          }
+        };
+      }
     }
 
     // Build orderBy clause

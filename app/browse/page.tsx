@@ -22,13 +22,33 @@ interface Config {
     icon: string | null
   }
   modLoader: string
-  mcVersion: string
   isPremium: boolean
   price: number | null
   downloads: number
   averageRating: number
   totalRatings: number
   downloadCount: number
+  tags: Array<{ id: string; name: string; slug: string }>
+  gameModes: Array<{ id: string; name: string; slug: string; icon: string | null }>
+  minecraftVersions: Array<{ id: string; version: string }>
+}
+
+interface Tag {
+  id: string
+  name: string
+  slug: string
+}
+
+interface GameMode {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+}
+
+interface MinecraftVersion {
+  id: string
+  version: string
 }
 
 interface PaginationData {
@@ -47,6 +67,7 @@ export default function BrowsePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState('recent')
   const [currentPage, setCurrentPage] = useState(1)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   const [configs, setConfigs] = useState<Config[]>([])
   const [pagination, setPagination] = useState<PaginationData | null>(null)
@@ -54,13 +75,29 @@ export default function BrowsePage() {
   const [error, setError] = useState<string | null>(null)
 
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([])
+  const [tags, setTags] = useState<Tag[]>([])
+  const [gameModes, setGameModes] = useState<GameMode[]>([])
+  const [minecraftVersions, setMinecraftVersions] = useState<MinecraftVersion[]>([])
 
-  // Fetch categories
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedGameModes, setSelectedGameModes] = useState<string[]>([])
+  const [selectedMinecraftVersions, setSelectedMinecraftVersions] = useState<string[]>([])
+
+  // Fetch categories, tags, game modes, and minecraft versions
   useEffect(() => {
-    fetch('/api/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data.categories || []))
-      .catch(err => console.error('Failed to load categories:', err))
+    Promise.all([
+      fetch('/api/categories').then(res => res.json()),
+      fetch('/api/tags').then(res => res.json()),
+      fetch('/api/game-modes').then(res => res.json()),
+      fetch('/api/minecraft-versions').then(res => res.json())
+    ])
+      .then(([categoriesData, tagsData, gameModesData, versionsData]) => {
+        setCategories(categoriesData.categories || [])
+        setTags(tagsData.tags || [])
+        setGameModes(gameModesData.gameModes || [])
+        setMinecraftVersions(versionsData.versions || [])
+      })
+      .catch(err => console.error('Failed to load data:', err))
   }, [])
 
   // Fetch configs
@@ -78,6 +115,9 @@ export default function BrowsePage() {
       if (searchQuery) params.append('search', searchQuery)
       if (selectedModLoader !== 'all') params.append('modLoader', selectedModLoader.toUpperCase())
       if (selectedCategory !== 'all') params.append('category', selectedCategory)
+      if (selectedTags.length > 0) params.append('tags', selectedTags.join(','))
+      if (selectedGameModes.length > 0) params.append('gameModes', selectedGameModes.join(','))
+      if (selectedMinecraftVersions.length > 0) params.append('minecraftVersions', selectedMinecraftVersions.join(','))
 
       try {
         const res = await fetch(`/api/configs?${params}`)
@@ -100,7 +140,7 @@ export default function BrowsePage() {
     }, searchQuery ? 500 : 0)
 
     return () => clearTimeout(timer)
-  }, [searchQuery, selectedModLoader, selectedCategory, sortBy, currentPage])
+  }, [searchQuery, selectedModLoader, selectedCategory, sortBy, currentPage, selectedTags, selectedGameModes, selectedMinecraftVersions])
 
   const modLoaders = ['All', 'Forge', 'Fabric', 'NeoForge', 'Quilt', 'Vanilla']
 
@@ -125,7 +165,7 @@ export default function BrowsePage() {
             </svg>
           </div>
 
-          {/* Filters */}
+          {/* Basic Filters */}
           <div className="grid md:grid-cols-3 gap-4">
             {/* Mod Loader Filter */}
             <div>
@@ -187,6 +227,143 @@ export default function BrowsePage() {
               </select>
             </div>
           </div>
+
+          {/* Advanced Filters Toggle */}
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium flex items-center gap-2"
+          >
+            {showAdvancedFilters ? '▼' : '▶'} Advanced Filters
+            {(selectedTags.length > 0 || selectedGameModes.length > 0 || selectedMinecraftVersions.length > 0) && (
+              <Badge variant="primary" className="ml-1">
+                {selectedTags.length + selectedGameModes.length + selectedMinecraftVersions.length}
+              </Badge>
+            )}
+          </button>
+
+          {/* Advanced Filters */}
+          {showAdvancedFilters && (
+            <div className="space-y-4 p-4 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
+              {/* Minecraft Versions */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
+                  Minecraft Versions
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {minecraftVersions.map((version) => (
+                    <label
+                      key={version.id}
+                      className={`cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-all ${
+                        selectedMinecraftVersions.includes(version.id)
+                          ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
+                          : 'bg-[var(--surface-light)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMinecraftVersions.includes(version.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedMinecraftVersions([...selectedMinecraftVersions, version.id])
+                          } else {
+                            setSelectedMinecraftVersions(selectedMinecraftVersions.filter(id => id !== version.id))
+                          }
+                          setCurrentPage(1)
+                        }}
+                        className="hidden"
+                      />
+                      {version.version}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Game Modes */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
+                  Game Modes
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {gameModes.map((mode) => (
+                    <label
+                      key={mode.id}
+                      className={`cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-all flex items-center gap-1.5 ${
+                        selectedGameModes.includes(mode.slug)
+                          ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
+                          : 'bg-[var(--surface-light)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedGameModes.includes(mode.slug)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedGameModes([...selectedGameModes, mode.slug])
+                          } else {
+                            setSelectedGameModes(selectedGameModes.filter(slug => slug !== mode.slug))
+                          }
+                          setCurrentPage(1)
+                        }}
+                        className="hidden"
+                      />
+                      {mode.icon && <span>{mode.icon}</span>}
+                      {mode.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
+                  Tags
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <label
+                      key={tag.id}
+                      className={`cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-all ${
+                        selectedTags.includes(tag.slug)
+                          ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
+                          : 'bg-[var(--surface-light)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTags.includes(tag.slug)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTags([...selectedTags, tag.slug])
+                          } else {
+                            setSelectedTags(selectedTags.filter(slug => slug !== tag.slug))
+                          }
+                          setCurrentPage(1)
+                        }}
+                        className="hidden"
+                      />
+                      {tag.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clear Filters */}
+              {(selectedTags.length > 0 || selectedGameModes.length > 0 || selectedMinecraftVersions.length > 0) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedTags([])
+                    setSelectedGameModes([])
+                    setSelectedMinecraftVersions([])
+                    setCurrentPage(1)
+                  }}
+                >
+                  Clear Advanced Filters
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Results Count */}
@@ -252,10 +429,36 @@ export default function BrowsePage() {
                   {config.description}
                 </p>
 
-                <div className="flex gap-2 mb-4">
+                <div className="flex flex-wrap gap-2 mb-4">
                   <Badge variant="primary">{config.modLoader}</Badge>
-                  <Badge variant="secondary">{config.mcVersion}</Badge>
+                  {config.minecraftVersions.slice(0, 2).map((version) => (
+                    <Badge key={version.id} variant="secondary">{version.version}</Badge>
+                  ))}
+                  {config.minecraftVersions.length > 2 && (
+                    <Badge variant="secondary">+{config.minecraftVersions.length - 2}</Badge>
+                  )}
+                  {config.gameModes.slice(0, 2).map((mode) => (
+                    <Badge key={mode.id} variant="accent">{mode.icon || ''} {mode.name}</Badge>
+                  ))}
+                  {config.gameModes.length > 2 && (
+                    <Badge variant="accent">+{config.gameModes.length - 2}</Badge>
+                  )}
                 </div>
+
+                {config.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {config.tags.slice(0, 3).map((tag) => (
+                      <span key={tag.id} className="text-xs px-2 py-1 bg-[var(--surface-light)] text-[var(--text-secondary)] rounded">
+                        {tag.name}
+                      </span>
+                    ))}
+                    {config.tags.length > 3 && (
+                      <span className="text-xs px-2 py-1 bg-[var(--surface-light)] text-[var(--text-secondary)] rounded">
+                        +{config.tags.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div className="mt-auto pt-4 border-t border-[var(--border)]">
                   <div className="flex justify-between items-center text-sm mb-4">
