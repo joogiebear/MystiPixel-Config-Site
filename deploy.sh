@@ -214,10 +214,26 @@ sudo -u $ACTUAL_USER npm run build
 
 echo ""
 echo -e "${GREEN}[14/15] Setting up PM2...${NC}"
+
+# Determine home directory
+if [ "$ACTUAL_USER" = "root" ]; then
+    USER_HOME="/root"
+else
+    USER_HOME="/home/$ACTUAL_USER"
+fi
+
+# Start app with PM2
 sudo -u $ACTUAL_USER pm2 delete $APP_NAME 2>/dev/null || true
 sudo -u $ACTUAL_USER pm2 start npm --name $APP_NAME -- start
 sudo -u $ACTUAL_USER pm2 save
-sudo -u $ACTUAL_USER pm2 startup systemd -u $ACTUAL_USER --hp /home/$ACTUAL_USER | tail -n 1 | bash
+
+# Setup PM2 startup script
+STARTUP_CMD=$(sudo -u $ACTUAL_USER pm2 startup systemd -u $ACTUAL_USER --hp $USER_HOME | grep "sudo")
+if [ -n "$STARTUP_CMD" ]; then
+    eval $STARTUP_CMD
+else
+    echo -e "${YELLOW}Warning: Could not configure PM2 auto-startup. You can set it up manually later.${NC}"
+fi
 
 echo ""
 echo -e "${GREEN}[15/15] Configuring nginx...${NC}"
