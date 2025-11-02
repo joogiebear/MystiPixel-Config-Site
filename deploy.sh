@@ -39,13 +39,13 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_NAME="confighub"
-APP_DIR="/var/www/confighub"
+APP_NAME="mystipixel"
+APP_DIR="/var/www/mystipixel"
 REPO_URL="https://github.com/joogiebear/MystiPixel-Config-Site.git"
 NODE_VERSION="20"
 DOMAIN=""  # Will be prompted
-DB_NAME="confighub_db"
-DB_USER="confighub_user"
+DB_NAME="mystipixel_db"
+DB_USER="mystipixel_user"
 DB_PASSWORD=""  # Will be generated
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
@@ -170,7 +170,7 @@ NODE_ENV="production"
 PORT=3000
 
 # File Upload (using local storage)
-UPLOAD_DIR="/var/www/confighub/uploads"
+UPLOAD_DIR="/var/www/mystipixel/uploads"
 MAX_FILE_SIZE=10485760
 
 # Optional: Add these later
@@ -207,13 +207,6 @@ echo ""
 echo -e "${GREEN}[12/15] Running database migrations...${NC}"
 sudo -u $ACTUAL_USER npx prisma generate
 sudo -u $ACTUAL_USER npx prisma db push
-
-echo ""
-read -p "Do you want to seed the database with sample data? (y/n): " SEED_DB
-if [ "$SEED_DB" = "y" ]; then
-    echo -e "${GREEN}Seeding database...${NC}"
-    sudo -u $ACTUAL_USER npm run db:seed
-fi
 
 echo ""
 echo -e "${GREEN}[13/15] Building application...${NC}"
@@ -254,7 +247,7 @@ server {
 
     # Serve uploaded files directly
     location /uploads/ {
-        alias /var/www/confighub/uploads/;
+        alias /var/www/mystipixel/uploads/;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
@@ -322,7 +315,7 @@ echo ""
 echo -e "  🔑 Database Password: ${RED}${DB_PASSWORD}${NC}"
 echo -e "  🔐 NextAuth Secret:   ${RED}${NEXTAUTH_SECRET}${NC}"
 echo ""
-echo -e "  💾 Credentials saved to: ${YELLOW}/root/confighub-credentials.txt${NC}"
+echo -e "  💾 Credentials saved to: ${YELLOW}/root/mystipixel-credentials.txt${NC}"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}                  MANAGEMENT COMMANDS${NC}"
@@ -361,8 +354,8 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 
 # Save credentials to file
-cat > /root/confighub-credentials.txt << EOF
-ConfigHub Deployment Credentials
+cat > /root/mystipixel-credentials.txt << EOF
+MystiPixel Config Site Deployment Credentials
 Generated: $(date)
 
 Database Name: ${DB_NAME}
@@ -375,5 +368,5 @@ Domain: ${DOMAIN}
 App Directory: ${APP_DIR}
 EOF
 
-chmod 600 /root/confighub-credentials.txt
-echo -e "${YELLOW}Credentials saved to: /root/confighub-credentials.txt${NC}"
+chmod 600 /root/mystipixel-credentials.txt
+echo -e "${YELLOW}Credentials saved to: /root/mystipixel-credentials.txt${NC}"

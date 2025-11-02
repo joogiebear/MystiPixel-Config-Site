@@ -12,7 +12,7 @@
 # - Restart the application with zero downtime
 #
 # Usage:
-#   cd /var/www/confighub
+#   cd /var/www/mystipixel
 #   chmod +x update.sh
 #   sudo ./update.sh
 ################################################################################
@@ -30,8 +30,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-APP_NAME="confighub"
-APP_DIR="/var/www/confighub"
+APP_NAME="mystipixel"
+APP_DIR="/var/www/mystipixel"
 
 # Check if running as root/sudo
 if [[ $EUID -ne 0 ]]; then
