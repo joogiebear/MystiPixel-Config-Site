@@ -80,7 +80,7 @@ sudo -u $ACTUAL_USER git pull origin $(git rev-parse --abbrev-ref HEAD)
 
 echo ""
 echo -e "${GREEN}[3/7] Installing/updating dependencies...${NC}"
-sudo -u $ACTUAL_USER npm install --production
+sudo -u $ACTUAL_USER npm install
 
 echo ""
 echo -e "${GREEN}[4/7] Running database migrations...${NC}"
