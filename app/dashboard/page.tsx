@@ -13,6 +13,9 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview')
   const [configs, setConfigs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [profileData, setProfileData] = useState({ name: '', bio: '' })
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [updateMessage, setUpdateMessage] = useState('')
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -93,6 +96,76 @@ export default function DashboardPage() {
   const handleEdit = (configId: string) => {
     router.push(`/config/${configId}/edit`)
   }
+
+  // Handle profile update
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData)
+      })
+
+      if (response.ok) {
+        setUpdateMessage('Profile updated successfully!')
+        setTimeout(() => setUpdateMessage(''), 3000)
+      } else {
+        setUpdateMessage('Failed to update profile')
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      setUpdateMessage('Error updating profile')
+    }
+  }
+
+  // Handle password change
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setUpdateMessage('Passwords do not match!')
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setUpdateMessage('Password must be at least 6 characters')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/user/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      })
+
+      if (response.ok) {
+        setUpdateMessage('Password changed successfully!')
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        setTimeout(() => setUpdateMessage(''), 3000)
+      } else {
+        const data = await response.json()
+        setUpdateMessage(data.error || 'Failed to change password')
+      }
+    } catch (error) {
+      console.error('Error changing password:', error)
+      setUpdateMessage('Error changing password')
+    }
+  }
+
+  // Load user profile data
+  useEffect(() => {
+    if (session?.user) {
+      setProfileData({
+        name: session.user.name || '',
+        bio: '' // TODO: Fetch from API
+      })
+    }
+  }, [session])
 
   return (
     <div className="min-h-screen">
@@ -296,16 +369,23 @@ export default function DashboardPage() {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="space-y-6">
+            {updateMessage && (
+              <div className={`p-4 rounded-lg ${updateMessage.includes('success') ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                {updateMessage}
+              </div>
+            )}
+
             <Card>
               <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Profile Settings</h2>
-              <div className="space-y-4 max-w-2xl">
+              <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-2xl">
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                     Display Name
                   </label>
                   <input
                     type="text"
-                    value={user.name}
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                     className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
                   />
                 </div>
@@ -316,8 +396,10 @@ export default function DashboardPage() {
                   <input
                     type="email"
                     value={user.email}
-                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
+                    disabled
+                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-secondary)] cursor-not-allowed"
                   />
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">Email cannot be changed</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
@@ -325,20 +407,77 @@ export default function DashboardPage() {
                   </label>
                   <textarea
                     rows={4}
+                    value={profileData.bio}
+                    onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                     className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
                     placeholder="Tell the community about yourself..."
                   />
                 </div>
-                <Button variant="primary">Save Changes</Button>
-              </div>
+                <Button type="submit" variant="primary">Save Profile</Button>
+              </form>
             </Card>
 
             <Card>
-              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Payment Settings</h2>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Change Password</h2>
+              <form onSubmit={handlePasswordChange} className="space-y-4 max-w-2xl">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
+                    required
+                    minLength={6}
+                  />
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">Minimum 6 characters</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
+                    required
+                  />
+                </div>
+                <Button type="submit" variant="primary">Change Password</Button>
+              </form>
+            </Card>
+
+            <Card>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Account</h2>
               <div className="space-y-4 max-w-2xl">
-                <p className="text-[var(--text-secondary)]">Configure your payment method to receive earnings</p>
-                <Button variant="outline">Connect PayPal</Button>
-                <Button variant="outline">Connect Stripe</Button>
+                <div className="flex items-center justify-between p-4 bg-[var(--surface-light)] rounded-lg">
+                  <div>
+                    <h3 className="font-medium text-[var(--text-primary)]">Account Created</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">{new Date().toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                  <div>
+                    <h3 className="font-medium text-red-500">Delete Account</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">Permanently delete your account and all data</p>
+                  </div>
+                  <Button variant="ghost" className="text-red-500">Delete</Button>
+                </div>
               </div>
             </Card>
           </div>
