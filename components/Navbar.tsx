@@ -64,8 +64,12 @@ export default function Navbar() {
                   className="flex items-center space-x-3 focus:outline-none hover:opacity-80 transition-opacity"
                 >
                   {/* User Avatar */}
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-medium text-sm">
-                    {session.user?.name?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || 'U'}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-medium text-sm overflow-hidden">
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{session.user?.name?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || 'U'}</span>
+                    )}
                   </div>
                   <span className="text-[var(--text-primary)] font-medium">{session.user?.name || 'User'}</span>
                   <svg className={`w-4 h-4 text-[var(--text-secondary)] transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,8 +157,12 @@ export default function Navbar() {
             {session ? (
               <div className="px-3 py-2 space-y-2 border-t border-[var(--border)] mt-2 pt-4">
                 <div className="flex items-center space-x-3 px-3 py-2">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-medium">
-                    {session.user?.name?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || 'U'}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-medium overflow-hidden">
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{session.user?.name?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || 'U'}</span>
+                    )}
                   </div>
                   <div>
                     <div className="font-medium text-[var(--text-primary)]">{session.user?.name || 'User'}</div>

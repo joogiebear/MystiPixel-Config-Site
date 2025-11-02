@@ -156,8 +156,12 @@ export default function ProfilePage() {
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-6">
               {/* Avatar */}
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-bold text-4xl">
-                {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-bold text-4xl overflow-hidden">
+                {user.image ? (
+                  <img src={user.image} alt={user.name || 'User'} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}</span>
+                )}
               </div>
 
               {/* User Info */}
@@ -289,8 +293,12 @@ export default function ProfilePage() {
                     <div key={comment.id} className="pb-4 border-b border-[var(--border)] last:border-0">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-medium text-xs">
-                            {comment.author?.name?.[0]?.toUpperCase() || 'U'}
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-medium text-xs overflow-hidden">
+                            {comment.author?.image ? (
+                              <img src={comment.author.image} alt={comment.author.name || 'User'} className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{comment.author?.name?.[0]?.toUpperCase() || 'U'}</span>
+                            )}
                           </div>
                           <div>
                             <div className="font-medium text-[var(--text-primary)] text-sm">

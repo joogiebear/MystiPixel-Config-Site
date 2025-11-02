@@ -16,6 +16,8 @@ export default function DashboardPage() {
   const [profileData, setProfileData] = useState({ name: '', bio: '' })
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [updateMessage, setUpdateMessage] = useState('')
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -157,6 +159,72 @@ export default function DashboardPage() {
     }
   }
 
+  // Handle avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    // Upload
+    setUploadingAvatar(true)
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+
+      const response = await fetch('/api/user/avatar', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        setUpdateMessage('Avatar updated successfully!')
+        setTimeout(() => {
+          setUpdateMessage('')
+          window.location.reload() // Reload to update session
+        }, 1500)
+      } else {
+        const data = await response.json()
+        setUpdateMessage(data.error || 'Failed to upload avatar')
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      setUpdateMessage('Error uploading avatar')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  // Handle avatar removal
+  const handleRemoveAvatar = async () => {
+    if (!confirm('Remove your avatar?')) return
+
+    try {
+      const response = await fetch('/api/user/avatar', {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setAvatarPreview(null)
+        setUpdateMessage('Avatar removed successfully!')
+        setTimeout(() => {
+          setUpdateMessage('')
+          window.location.reload() // Reload to update session
+        }, 1500)
+      } else {
+        setUpdateMessage('Failed to remove avatar')
+      }
+    } catch (error) {
+      console.error('Error removing avatar:', error)
+      setUpdateMessage('Error removing avatar')
+    }
+  }
+
   // Load user profile data
   useEffect(() => {
     if (session?.user) {
@@ -164,6 +232,7 @@ export default function DashboardPage() {
         name: session.user.name || '',
         bio: '' // TODO: Fetch from API
       })
+      setAvatarPreview(session.user.image || null)
     }
   }, [session])
 
@@ -374,6 +443,52 @@ export default function DashboardPage() {
                 {updateMessage}
               </div>
             )}
+
+            {/* Avatar Upload */}
+            <Card>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Avatar</h2>
+              <div className="flex items-center gap-6">
+                {/* Avatar Preview */}
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-bold text-4xl overflow-hidden">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{user.name?.[0]?.toUpperCase() || 'U'}</span>
+                  )}
+                </div>
+
+                {/* Upload Controls */}
+                <div className="flex-1">
+                  <div className="flex gap-3">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        disabled={uploadingAvatar}
+                      />
+                      <Button variant="primary" size="sm" as="span" disabled={uploadingAvatar}>
+                        {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                      </Button>
+                    </label>
+                    {avatarPreview && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoveAvatar}
+                        disabled={uploadingAvatar}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--text-secondary)] mt-2">
+                    Recommended: Square image, at least 200x200px. Max 5MB.
+                  </p>
+                </div>
+              </div>
+            </Card>
 
             <Card>
               <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Profile Settings</h2>
