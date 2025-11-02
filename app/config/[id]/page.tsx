@@ -549,7 +549,7 @@ export default function ConfigDetailPage() {
                                 onClick={() => setUserRating(star)}
                                 onMouseEnter={() => setHoverRating(star)}
                                 onMouseLeave={() => setHoverRating(0)}
-                                className="text-4xl transition-opacity hover:opacity-80 focus:outline-none cursor-pointer"
+                                className="text-4xl focus:outline-none cursor-pointer"
                                 disabled={submittingRating}
                               >
                                 {(hoverRating || userRating) >= star ? '⭐' : '☆'}
