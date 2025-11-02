@@ -37,7 +37,12 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials')
         }
 
-        return user
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name || user.email,
+          image: user.image || undefined
+        }
       }
     })
   ],
@@ -45,8 +50,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt'
   },
   pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
+    signIn: '/auth/signin'
   },
   callbacks: {
     async jwt({ token, user }) {

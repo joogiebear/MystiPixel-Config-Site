@@ -5,10 +5,10 @@ import path from 'path';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch config
     const config = await prisma.config.findUnique({
@@ -55,8 +55,7 @@ export async function POST(
     await prisma.download.create({
       data: {
         configId: id,
-        userId: userId,
-        downloadedAt: new Date()
+        userId: userId
       }
     });
 
@@ -111,10 +110,10 @@ export async function POST(
 // GET endpoint to get download URL (for premium configs after payment)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const config = await prisma.config.findUnique({
       where: { id },

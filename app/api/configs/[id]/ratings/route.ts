@@ -5,10 +5,10 @@ import { requireAuth } from '@/lib/auth-helpers';
 // GET all ratings for a config
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const ratings = await prisma.rating.findMany({
       where: { configId: id },
@@ -28,15 +28,15 @@ export async function GET(
 
     // Calculate average and distribution
     const avgRating = ratings.length > 0
-      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+      ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
       : 0;
 
     const distribution = {
-      5: ratings.filter(r => r.rating === 5).length,
-      4: ratings.filter(r => r.rating === 4).length,
-      3: ratings.filter(r => r.rating === 3).length,
-      2: ratings.filter(r => r.rating === 2).length,
-      1: ratings.filter(r => r.rating === 1).length,
+      5: ratings.filter((r: any) => r.rating === 5).length,
+      4: ratings.filter((r: any) => r.rating === 4).length,
+      3: ratings.filter((r: any) => r.rating === 3).length,
+      2: ratings.filter((r: any) => r.rating === 2).length,
+      1: ratings.filter((r: any) => r.rating === 1).length,
     };
 
     return NextResponse.json({
@@ -58,10 +58,10 @@ export async function GET(
 // POST new rating
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Require authentication
     const userId = await requireAuth();
@@ -92,9 +92,9 @@ export async function POST(
     // Check if user already rated this config
     const existingRating = await prisma.rating.findUnique({
       where: {
-        userId_configId: {
-          userId,
-          configId: id
+        configId_userId: {
+          configId: id,
+          userId
         }
       }
     });
@@ -105,9 +105,9 @@ export async function POST(
       // Update existing rating
       result = await prisma.rating.update({
         where: {
-          userId_configId: {
-            userId,
-            configId: id
+          configId_userId: {
+            configId: id,
+            userId
           }
         },
         data: {
@@ -168,19 +168,19 @@ export async function POST(
 // DELETE rating
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Require authentication
     const userId = await requireAuth();
 
     await prisma.rating.delete({
       where: {
-        userId_configId: {
-          userId,
-          configId: id
+        configId_userId: {
+          configId: id,
+          userId
         }
       }
     });

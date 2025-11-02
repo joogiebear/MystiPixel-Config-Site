@@ -5,10 +5,10 @@ import { requireAuth } from '@/lib/auth-helpers';
 // GET all comments for a config
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -18,7 +18,7 @@ export async function GET(
       prisma.comment.findMany({
         where: { configId: id },
         include: {
-          user: {
+          author: {
             select: {
               id: true,
               name: true,
@@ -59,10 +59,10 @@ export async function GET(
 // POST new comment
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Require authentication
     const userId = await requireAuth();
@@ -101,11 +101,11 @@ export async function POST(
     const comment = await prisma.comment.create({
       data: {
         content: content.trim(),
-        userId,
+        authorId: userId,
         configId: id
       },
       include: {
-        user: {
+        author: {
           select: {
             id: true,
             name: true,

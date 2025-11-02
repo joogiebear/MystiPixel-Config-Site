@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma';
 // PATCH - Update comment
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { commentId: string } }
+  { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
-    const { commentId } = params;
+    const { commentId } = await params;
     const body = await request.json();
 
     // TODO: Add authentication and authorization
@@ -37,7 +37,7 @@ export async function PATCH(
       where: { id: commentId },
       data: { content: content.trim() },
       include: {
-        user: {
+        author: {
           select: {
             id: true,
             name: true,
@@ -61,10 +61,10 @@ export async function PATCH(
 // DELETE comment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { commentId: string } }
+  { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
-    const { commentId } = params;
+    const { commentId } = await params;
 
     // TODO: Add authentication and authorization
     // Make sure the user owns this comment

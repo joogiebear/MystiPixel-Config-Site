@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma';
 // GET single config by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Increment view count
     await prisma.config.update({
@@ -44,8 +44,7 @@ export async function GET(
         tags: {
           select: {
             id: true,
-            name: true,
-            slug: true
+            name: true
           }
         },
         ratings: {
@@ -64,7 +63,7 @@ export async function GET(
         },
         comments: {
           include: {
-            user: {
+            author: {
               select: {
                 id: true,
                 name: true,
@@ -78,7 +77,7 @@ export async function GET(
         },
         _count: {
           select: {
-            downloads: true,
+            downloadRecords: true,
             favorites: true,
             comments: true,
             ratings: true
@@ -96,16 +95,16 @@ export async function GET(
 
     // Calculate average rating
     const avgRating = config.ratings.length > 0
-      ? config.ratings.reduce((sum, r) => sum + r.rating, 0) / config.ratings.length
+      ? config.ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / config.ratings.length
       : 0;
 
     // Calculate rating distribution
     const ratingDistribution = {
-      5: config.ratings.filter(r => r.rating === 5).length,
-      4: config.ratings.filter(r => r.rating === 4).length,
-      3: config.ratings.filter(r => r.rating === 3).length,
-      2: config.ratings.filter(r => r.rating === 2).length,
-      1: config.ratings.filter(r => r.rating === 1).length,
+      5: config.ratings.filter((r: any) => r.rating === 5).length,
+      4: config.ratings.filter((r: any) => r.rating === 4).length,
+      3: config.ratings.filter((r: any) => r.rating === 3).length,
+      2: config.ratings.filter((r: any) => r.rating === 2).length,
+      1: config.ratings.filter((r: any) => r.rating === 1).length,
     };
 
     return NextResponse.json({
@@ -113,7 +112,7 @@ export async function GET(
       averageRating: Math.round(avgRating * 10) / 10,
       totalRatings: config.ratings.length,
       ratingDistribution,
-      downloadCount: config._count.downloads,
+      downloadCount: config._count.downloadRecords,
       favoriteCount: config._count.favorites,
       commentCount: config._count.comments
     });
@@ -130,10 +129,10 @@ export async function GET(
 // PATCH endpoint for updating configs
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // TODO: Add authentication and authorization check
@@ -163,10 +162,10 @@ export async function PATCH(
 // DELETE endpoint for deleting configs
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // TODO: Add authentication and authorization check
     // Make sure the user owns this config

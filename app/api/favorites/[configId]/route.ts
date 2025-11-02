@@ -5,10 +5,10 @@ import { getCurrentUserId } from '@/lib/auth-helpers';
 // GET - Check if config is favorited
 export async function GET(
   request: NextRequest,
-  { params }: { params: { configId: string } }
+  { params }: { params: Promise<{ configId: string }> }
 ) {
   try {
-    const { configId } = params;
+    const { configId } = await params;
 
     // Get user ID (optional - returns null if not authenticated)
     const userId = await getCurrentUserId();
@@ -23,7 +23,7 @@ export async function GET(
 
     const favorite = await prisma.favorite.findUnique({
       where: {
-        userId_configId: {
+        configId_userId: {
           userId,
           configId
         }

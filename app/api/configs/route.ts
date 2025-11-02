@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { title: { contains: search } },
+        { description: { contains: search } }
       ];
     }
 
@@ -89,8 +89,7 @@ export async function GET(request: NextRequest) {
           tags: {
             select: {
               id: true,
-              name: true,
-              slug: true
+              name: true
             }
           },
           ratings: {
@@ -100,7 +99,7 @@ export async function GET(request: NextRequest) {
           },
           _count: {
             select: {
-              downloads: true,
+              downloadRecords: true,
               favorites: true,
               comments: true
             }
@@ -123,7 +122,7 @@ export async function GET(request: NextRequest) {
         ...configWithoutRatings,
         averageRating: Math.round(avgRating * 10) / 10,
         totalRatings: ratings.length,
-        downloadCount: config._count.downloads,
+        downloadCount: config._count.downloadRecords,
         favoriteCount: config._count.favorites,
         commentCount: config._count.comments
       };

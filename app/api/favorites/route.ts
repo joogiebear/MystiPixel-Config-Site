@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
             },
             _count: {
               select: {
-                downloads: true,
+                downloadRecords: true,
                 ratings: true
               }
             }
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     // Check if already favorited
     const existing = await prisma.favorite.findUnique({
       where: {
-        userId_configId: {
+        configId_userId: {
           userId,
           configId
         }
@@ -173,7 +173,7 @@ export async function DELETE(request: NextRequest) {
 
     await prisma.favorite.delete({
       where: {
-        userId_configId: {
+        configId_userId: {
           userId,
           configId
         }

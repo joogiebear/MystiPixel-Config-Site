@@ -60,8 +60,7 @@ export async function GET() {
           tags: {
             select: {
               id: true,
-              name: true,
-              slug: true
+              name: true
             }
           },
           ratings: {
@@ -71,7 +70,7 @@ export async function GET() {
           },
           _count: {
             select: {
-              downloads: true
+              downloadRecords: true
             }
           }
         }
@@ -90,7 +89,7 @@ export async function GET() {
         ...rest,
         averageRating: Math.round(avgRating * 10) / 10,
         totalRatings: ratings.length,
-        downloadCount: config._count.downloads
+        downloadCount: config._count.downloadRecords
       };
     });
 

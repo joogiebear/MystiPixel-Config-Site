@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({
-      categories: categories.map(cat => ({
+      categories: categories.map((cat: any) => ({
         ...cat,
         configCount: cat._count.configs
       }))
