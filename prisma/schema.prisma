@@ -72,7 +72,7 @@ model Config {
   description String
   content     String
   fileUrl     String?
-  imageUrl    String?
+  imageUrl    String? @db.LongText
   category    Category @relation(fields: [categoryId], references: [id])
   categoryId  String
   modLoader   ModLoader
