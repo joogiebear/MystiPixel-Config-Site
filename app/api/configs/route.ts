@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const modLoader = searchParams.get('modLoader');
     const isPremium = searchParams.get('isPremium');
     const search = searchParams.get('search');
+    const authorId = searchParams.get('authorId');
     const sort = searchParams.get('sort') || 'recent';
 
     // Build where clause
@@ -34,6 +35,10 @@ export async function GET(request: NextRequest) {
 
     if (isPremium !== null && isPremium !== undefined) {
       where.isPremium = isPremium === 'true';
+    }
+
+    if (authorId) {
+      where.authorId = authorId;
     }
 
     if (search) {

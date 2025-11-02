@@ -11,41 +11,8 @@ export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
-  const [configs, setConfigs] = useState([
-    {
-      id: 1,
-      title: 'Ultimate Performance Pack',
-      downloads: 12500,
-      rating: 4.9,
-      status: 'published',
-      isPremium: true,
-      price: 4.99,
-      earnings: 6250,
-      sales: 1250
-    },
-    {
-      id: 2,
-      title: 'Server Optimization Bundle',
-      downloads: 8200,
-      rating: 4.8,
-      status: 'published',
-      isPremium: false,
-      price: 0,
-      earnings: 0,
-      sales: 0
-    },
-    {
-      id: 3,
-      title: 'New Config Draft',
-      downloads: 0,
-      rating: 0,
-      status: 'draft',
-      isPremium: true,
-      price: 3.99,
-      earnings: 0,
-      sales: 0
-    }
-  ])
+  const [configs, setConfigs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -53,6 +20,26 @@ export default function DashboardPage() {
       router.push('/auth/signin')
     }
   }, [status, router])
+
+  // Fetch user's configs
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchConfigs()
+    }
+  }, [session])
+
+  const fetchConfigs = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/configs?authorId=${session?.user?.id}`)
+      const data = await response.json()
+      setConfigs(data.configs || [])
+    } catch (error) {
+      console.error('Error fetching configs:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Show loading while checking auth
   if (status === 'loading') {
@@ -71,62 +58,40 @@ export default function DashboardPage() {
     return null
   }
 
-  // Mock user data (TODO: Replace with real user data from API)
+  // User data from session
   const user = {
     name: session.user?.name || 'User',
     email: session.user?.email || '',
-    isPremium: true,
-    joinDate: 'Jan 2024',
-    totalConfigs: 12,
-    totalDownloads: 45600,
-    totalEarnings: 12450.00,
-    followers: 1250
+    totalConfigs: configs.length,
+    totalDownloads: configs.reduce((sum, c) => sum + (c.downloads || 0), 0),
   }
 
   // Handle delete config
-  const handleDelete = async (configId: number) => {
-    if (!confirm('Are you sure you want to delete this config?')) {
+  const handleDelete = async (configId: string) => {
+    if (!confirm('Are you sure you want to delete this config? This action cannot be undone.')) {
       return
     }
 
-    // TODO: Replace with actual API call
-    // const response = await fetch(`/api/configs/${configId}`, { method: 'DELETE' })
+    try {
+      const response = await fetch(`/api/configs/${configId}`, {
+        method: 'DELETE'
+      })
 
-    // For now, just remove from local state
-    setConfigs(configs.filter(c => c.id !== configId))
-  }
-
-  // Handle edit config
-  const handleEdit = (configId: number) => {
-    // TODO: Navigate to edit page
-    router.push(`/config/${configId}/edit`)
-  }
-
-  const recentActivity = [
-    { type: 'sale', message: 'Someone purchased Ultimate Performance Pack', time: '2 hours ago', amount: 4.99 },
-    { type: 'download', message: 'Server Optimization Bundle was downloaded', time: '5 hours ago' },
-    { type: 'review', message: 'New 5-star review on Ultimate Performance Pack', time: '1 day ago' },
-    { type: 'sale', message: 'Someone purchased Ultimate Performance Pack', time: '2 days ago', amount: 4.99 }
-  ]
-
-  const analytics = {
-    thisMonth: {
-      downloads: 2450,
-      sales: 145,
-      earnings: 724.20,
-      views: 8900
-    },
-    lastMonth: {
-      downloads: 2180,
-      sales: 128,
-      earnings: 638.40,
-      views: 7800
+      if (response.ok) {
+        // Remove from local state
+        setConfigs(configs.filter(c => c.id !== configId))
+      } else {
+        alert('Failed to delete config. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error deleting config:', error)
+      alert('Failed to delete config. Please try again.')
     }
   }
 
-  const calculateGrowth = (current: number, previous: number) => {
-    const growth = ((current - previous) / previous) * 100
-    return growth.toFixed(1)
+  // Handle edit config
+  const handleEdit = (configId: string) => {
+    router.push(`/config/${configId}/edit`)
   }
 
   return (
@@ -176,82 +141,58 @@ export default function DashboardPage() {
                 <div className="text-3xl font-bold text-[var(--primary)]">{user.totalDownloads.toLocaleString()}</div>
               </Card>
               <Card>
-                <div className="text-sm text-[var(--text-secondary)] mb-1">Total Earnings</div>
-                <div className="text-3xl font-bold text-[var(--accent)]">${user.totalEarnings.toLocaleString()}</div>
+                <div className="text-sm text-[var(--text-secondary)] mb-1">Total Views</div>
+                <div className="text-3xl font-bold text-[var(--primary)]">{configs.reduce((sum, c) => sum + (c.views || 0), 0).toLocaleString()}</div>
               </Card>
               <Card>
-                <div className="text-sm text-[var(--text-secondary)] mb-1">Followers</div>
-                <div className="text-3xl font-bold text-[var(--primary)]">{user.followers}</div>
+                <div className="text-sm text-[var(--text-secondary)] mb-1">Avg Rating</div>
+                <div className="text-3xl font-bold text-[var(--primary)]">
+                  {configs.length > 0 ? (configs.reduce((sum, c) => sum + (c.averageRating || 0), 0) / configs.length).toFixed(1) : '0.0'}
+                </div>
               </Card>
             </div>
 
-            {/* This Month Performance */}
-            <Card>
-              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">This Month</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
-                  <div className="text-sm text-[var(--text-secondary)] mb-2">Downloads</div>
-                  <div className="text-2xl font-bold text-[var(--text-primary)] mb-1">
-                    {analytics.thisMonth.downloads.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-[var(--success)]">
-                    +{calculateGrowth(analytics.thisMonth.downloads, analytics.lastMonth.downloads)}% from last month
-                  </div>
+            {/* Getting Started / Empty State */}
+            {configs.length === 0 ? (
+              <Card>
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🎮</div>
+                  <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Welcome to MystiPixel!</h2>
+                  <p className="text-[var(--text-secondary)] mb-6">
+                    You haven't uploaded any configs yet. Get started by uploading your first Minecraft configuration!
+                  </p>
+                  <Button variant="primary" onClick={() => router.push('/upload')}>
+                    Upload Your First Config
+                  </Button>
                 </div>
-                <div>
-                  <div className="text-sm text-[var(--text-secondary)] mb-2">Sales</div>
-                  <div className="text-2xl font-bold text-[var(--text-primary)] mb-1">
-                    {analytics.thisMonth.sales}
-                  </div>
-                  <div className="text-xs text-[var(--success)]">
-                    +{calculateGrowth(analytics.thisMonth.sales, analytics.lastMonth.sales)}% from last month
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-[var(--text-secondary)] mb-2">Earnings</div>
-                  <div className="text-2xl font-bold text-[var(--accent)] mb-1">
-                    ${analytics.thisMonth.earnings.toFixed(2)}
-                  </div>
-                  <div className="text-xs text-[var(--success)]">
-                    +{calculateGrowth(analytics.thisMonth.earnings, analytics.lastMonth.earnings)}% from last month
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-[var(--text-secondary)] mb-2">Views</div>
-                  <div className="text-2xl font-bold text-[var(--text-primary)] mb-1">
-                    {analytics.thisMonth.views.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-[var(--success)]">
-                    +{calculateGrowth(analytics.thisMonth.views, analytics.lastMonth.views)}% from last month
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card>
-              <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Recent Activity</h2>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start justify-between py-3 border-b border-[var(--border)] last:border-0">
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">
-                        {activity.type === 'sale' && '💰'}
-                        {activity.type === 'download' && '⬇️'}
-                        {activity.type === 'review' && '⭐'}
-                      </div>
+              </Card>
+            ) : (
+              <Card>
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Your Configs</h2>
+                <div className="space-y-3">
+                  {configs.slice(0, 5).map((config) => (
+                    <div key={config.id} className="flex items-center justify-between p-3 bg-[var(--surface-light)] rounded-lg">
                       <div>
-                        <p className="text-[var(--text-primary)]">{activity.message}</p>
-                        <p className="text-sm text-[var(--text-secondary)]">{activity.time}</p>
+                        <h3 className="font-medium text-[var(--text-primary)]">{config.title}</h3>
+                        <p className="text-sm text-[var(--text-secondary)]">
+                          {config.downloads || 0} downloads • {config.views || 0} views
+                        </p>
                       </div>
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/config/${config.id}`)}>
+                        View
+                      </Button>
                     </div>
-                    {activity.amount && (
-                      <div className="text-[var(--accent)] font-semibold">+${activity.amount}</div>
-                    )}
+                  ))}
+                </div>
+                {configs.length > 5 && (
+                  <div className="mt-4 text-center">
+                    <Button variant="ghost" onClick={() => setActiveTab('my-configs')}>
+                      View All {configs.length} Configs
+                    </Button>
                   </div>
-                ))}
-              </div>
-            </Card>
+                )}
+              </Card>
+            )}
           </div>
         )}
 
@@ -263,41 +204,55 @@ export default function DashboardPage() {
               <Button variant="primary" onClick={() => router.push('/upload')}>Upload New Config</Button>
             </div>
 
-            <div className="space-y-4">
-              {configs.map((config) => (
+            {loading ? (
+              <Card>
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
+                  <p className="mt-4 text-[var(--text-secondary)]">Loading your configs...</p>
+                </div>
+              </Card>
+            ) : configs.length === 0 ? (
+              <Card>
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📦</div>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">No configs yet</h3>
+                  <p className="text-[var(--text-secondary)] mb-6">
+                    Upload your first Minecraft configuration to get started!
+                  </p>
+                  <Button variant="primary" onClick={() => router.push('/upload')}>
+                    Upload Config
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {configs.map((config) => (
                 <Card key={config.id} className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-semibold text-[var(--text-primary)]">
                         {config.title}
                       </h3>
-                      <Badge variant={config.status === 'published' ? 'success' : 'warning'}>
-                        {config.status}
-                      </Badge>
-                      {config.isPremium && <Badge variant="accent">Premium</Badge>}
+                      {config.isPremium && <Badge variant="accent">Premium ${config.price}</Badge>}
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-[var(--text-secondary)]">Downloads: </span>
-                        <span className="text-[var(--text-primary)] font-medium">{config.downloads.toLocaleString()}</span>
+                        <span className="text-[var(--text-primary)] font-medium">{(config.downloads || 0).toLocaleString()}</span>
                       </div>
-                      {config.isPremium && (
-                        <>
-                          <div>
-                            <span className="text-[var(--text-secondary)]">Sales: </span>
-                            <span className="text-[var(--text-primary)] font-medium">{config.sales}</span>
-                          </div>
-                          <div>
-                            <span className="text-[var(--text-secondary)]">Earnings: </span>
-                            <span className="text-[var(--accent)] font-medium">${config.earnings.toLocaleString()}</span>
-                          </div>
-                        </>
-                      )}
-                      {config.rating > 0 && (
+                      <div>
+                        <span className="text-[var(--text-secondary)]">Views: </span>
+                        <span className="text-[var(--text-primary)] font-medium">{(config.views || 0).toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-[var(--text-secondary)]">Comments: </span>
+                        <span className="text-[var(--text-primary)] font-medium">{config.commentCount || 0}</span>
+                      </div>
+                      {config.averageRating > 0 && (
                         <div>
                           <span className="text-[var(--text-secondary)]">Rating: </span>
-                          <span className="text-[var(--text-primary)] font-medium">⭐ {config.rating}</span>
+                          <span className="text-[var(--text-primary)] font-medium">⭐ {config.averageRating.toFixed(1)}</span>
                         </div>
                       )}
                     </div>
@@ -309,7 +264,8 @@ export default function DashboardPage() {
                   </div>
                 </Card>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -327,39 +283,14 @@ export default function DashboardPage() {
 
         {/* Earnings Tab */}
         {activeTab === 'earnings' && (
-          <div className="space-y-6">
-            <Card>
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Earnings Overview</h2>
-                  <p className="text-[var(--text-secondary)]">You keep 80% of all sales</p>
-                </div>
-                <Button variant="accent">Withdraw Funds</Button>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="text-center p-6 bg-[var(--surface-light)] rounded-lg">
-                  <div className="text-sm text-[var(--text-secondary)] mb-2">Available Balance</div>
-                  <div className="text-3xl font-bold text-[var(--accent)]">$9,960.00</div>
-                </div>
-                <div className="text-center p-6 bg-[var(--surface-light)] rounded-lg">
-                  <div className="text-sm text-[var(--text-secondary)] mb-2">Pending</div>
-                  <div className="text-3xl font-bold text-[var(--text-primary)]">$2,490.00</div>
-                </div>
-                <div className="text-center p-6 bg-[var(--surface-light)] rounded-lg">
-                  <div className="text-sm text-[var(--text-secondary)] mb-2">Lifetime Earnings</div>
-                  <div className="text-3xl font-bold text-[var(--primary)]">$12,450.00</div>
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-4">Transaction History</h3>
-              <div className="text-center py-8 text-[var(--text-secondary)]">
-                <p>No transactions yet</p>
-              </div>
-            </Card>
-          </div>
+          <Card>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Earnings</h2>
+            <div className="text-center py-12 text-[var(--text-secondary)]">
+              <div className="text-6xl mb-4">💰</div>
+              <p className="mb-2">Premium features coming soon!</p>
+              <p className="text-sm">Upload premium configs and start earning from your creations</p>
+            </div>
+          </Card>
         )}
 
         {/* Settings Tab */}
