@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# uploads directory (user uploaded files)
+/uploads
+
+# prisma config (uses env vars, should be generated on deploy)
+prisma.config.ts

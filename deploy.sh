@@ -145,6 +145,16 @@ EOF
 
 echo -e "${GREEN}Environment file created!${NC}"
 
+# Ensure .env is readable
+chmod 644 .env
+chown $ACTUAL_USER:$ACTUAL_USER .env
+
+# Verify .env file exists and has DATABASE_URL
+if ! grep -q "DATABASE_URL" .env; then
+    echo -e "${RED}Error: DATABASE_URL not found in .env file${NC}"
+    exit 1
+fi
+
 echo ""
 echo -e "${GREEN}[10/15] Creating uploads directory...${NC}"
 mkdir -p uploads
