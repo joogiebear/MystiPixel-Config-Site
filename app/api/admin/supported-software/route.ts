@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' }
     });
 
-    return NextResponse.json({ supportedSoftware });
+    return NextResponse.json({ software: supportedSoftware });
 
   } catch (error) {
     console.error('Error fetching supported software:', error);
