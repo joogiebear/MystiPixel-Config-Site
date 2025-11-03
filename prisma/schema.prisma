@@ -67,19 +67,21 @@ model VerificationToken {
 }
 
 model Config {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  content     String
-  fileUrl     String?
-  imageUrl    String? @db.LongText
-  category    Category @relation(fields: [categoryId], references: [id])
-  categoryId  String
-  modLoader   ModLoader
-  isPremium   Boolean  @default(false)
-  price       Float?
-  downloads   Int      @default(0)
-  views       Int      @default(0)
+  id                 String   @id @default(cuid())
+  title              String
+  description        String
+  content            String   @db.Text
+  installationGuide  String?  @db.Text
+  dependencies       String?  @db.Text
+  fileUrl            String?
+  imageUrl           String?  @db.LongText
+  category           Category @relation(fields: [categoryId], references: [id])
+  categoryId         String
+  modLoader          ModLoader
+  isPremium          Boolean  @default(false)
+  price              Float?
+  downloads          Int      @default(0)
+  views              Int      @default(0)
 
   author      User     @relation(fields: [authorId], references: [id])
   authorId    String
