@@ -475,15 +475,13 @@ export default function ConfigDetailPage() {
 
                   {config.supportedVersions && config.supportedVersions.length > 0 && (
                     <div>
-                      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">Supported Versions</h3>
-                      <div className="bg-[var(--surface-light)] p-3 rounded-lg">
-                        <div className="flex flex-wrap gap-2">
-                          {config.supportedVersions.map((version) => (
-                            <span key={version.id} className="inline-flex items-center px-2.5 py-1 bg-[var(--surface)] border border-[var(--border)] rounded text-sm text-[var(--text-primary)]">
-                              {version.version}
-                            </span>
-                          ))}
-                        </div>
+                      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Supported Versions</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {config.supportedVersions.map((version) => (
+                          <span key={version.id} className="inline-flex items-center px-2 py-0.5 bg-[var(--surface-light)] text-xs font-medium text-[var(--text-primary)] rounded">
+                            {version.version}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   )}
