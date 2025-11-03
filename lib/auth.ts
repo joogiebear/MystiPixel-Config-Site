@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
+import { checkLoginRateLimit, recordLoginAttempt } from './rate-limit'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
@@ -18,14 +19,24 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials')
         }
 
+        const email = credentials.email.toLowerCase().trim();
+
+        // Check rate limit
+        const rateLimitCheck = checkLoginRateLimit(email);
+        if (!rateLimitCheck.allowed) {
+          const minutes = Math.ceil(rateLimitCheck.retryAfter! / 60);
+          throw new Error(`Too many login attempts. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`)
+        }
+
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email
+            email
           }
         })
 
         if (!user || !user.password) {
-          throw new Error('Invalid credentials')
+          recordLoginAttempt(email, false);
+          throw new Error('Invalid email or password')
         }
 
         const isCorrectPassword = await bcrypt.compare(
@@ -34,8 +45,12 @@ export const authOptions: NextAuthOptions = {
         )
 
         if (!isCorrectPassword) {
-          throw new Error('Invalid credentials')
+          recordLoginAttempt(email, false);
+          throw new Error('Invalid email or password')
         }
+
+        // Successful login - clear rate limit
+        recordLoginAttempt(email, true);
 
         return {
           id: user.id,
