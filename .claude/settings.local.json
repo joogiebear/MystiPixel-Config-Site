@@ -27,7 +27,8 @@
       "Bash(ssh root@94.72.119.50 \"cd /var/www/mystipixel && git pull origin master && npm run build && pm2 reload mystipixel\")",
       "Bash(ssh root@94.72.119.50 \"cd /var/www/mystipixel && git pull origin master && npx prisma generate && npx prisma db push\")",
       "Bash(ssh root@94.72.119.50 \"cd /var/www/mystipixel && npm run build && pm2 reload mystipixel\")",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

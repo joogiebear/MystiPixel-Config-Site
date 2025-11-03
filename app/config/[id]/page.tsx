@@ -13,6 +13,8 @@ interface ConfigData {
   title: string
   description: string
   content: string
+  installationGuide: string | null
+  dependencies: string | null
   imageUrl: string | null
   author: {
     id: string
@@ -499,23 +501,50 @@ export default function ConfigDetailPage() {
               )}
 
               {activeTab === 'installation' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Installation Guide</h2>
-                  <div className="bg-[var(--surface-light)] p-4 rounded-lg">
-                    <ol className="list-decimal list-inside space-y-2 text-[var(--text-secondary)]">
-                      <li>Download the config file using the button on the right</li>
-                      <li>Navigate to your .minecraft folder</li>
-                      <li>Extract the contents into the appropriate folder (usually /config)</li>
-                      <li>Restart Minecraft</li>
-                      <li>Enjoy your new configuration!</li>
-                    </ol>
+                <div className="space-y-6">
+                  {/* Installation Guide */}
+                  <div>
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Installation Guide</h2>
+                    {config.installationGuide ? (
+                      <div className="bg-[var(--surface-light)] p-4 rounded-lg">
+                        <pre className="text-[var(--text-secondary)] whitespace-pre-wrap text-sm">
+                          {config.installationGuide}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="bg-[var(--surface-light)] p-4 rounded-lg">
+                        <ol className="list-decimal list-inside space-y-2 text-[var(--text-secondary)]">
+                          <li>Download the config file using the button on the right</li>
+                          <li>Navigate to your .minecraft folder</li>
+                          <li>Extract the contents into the appropriate folder (usually /config)</li>
+                          <li>Restart Minecraft</li>
+                          <li>Enjoy your new configuration!</li>
+                        </ol>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Dependencies */}
+                  {config.dependencies && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">Dependencies</h3>
+                      <div className="bg-[var(--surface-light)] p-4 rounded-lg">
+                        <pre className="text-[var(--text-secondary)] whitespace-pre-wrap text-sm">
+                          {config.dependencies}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Additional Information */}
                   {config.content && (
-                    <div className="mt-4">
-                      <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Additional Notes</h3>
-                      <pre className="bg-[var(--surface-light)] p-4 rounded-lg text-[var(--text-secondary)] whitespace-pre-wrap text-sm">
-                        {config.content}
-                      </pre>
+                    <div>
+                      <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">Additional Information</h3>
+                      <div className="bg-[var(--surface-light)] p-4 rounded-lg">
+                        <pre className="text-[var(--text-secondary)] whitespace-pre-wrap text-sm">
+                          {config.content}
+                        </pre>
+                      </div>
                     </div>
                   )}
                 </div>

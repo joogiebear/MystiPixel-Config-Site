@@ -44,6 +44,8 @@ export default function EditConfigPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [content, setContent] = useState('')
+  const [installationGuide, setInstallationGuide] = useState('')
+  const [dependencies, setDependencies] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [modLoader, setModLoader] = useState('FORGE')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -108,6 +110,8 @@ export default function EditConfigPage() {
         setTitle(config.title)
         setDescription(config.description)
         setContent(config.content || '')
+        setInstallationGuide(config.installationGuide || '')
+        setDependencies(config.dependencies || '')
         setCategoryId(config.category.id)
         setModLoader(config.modLoader)
         setSelectedTags(config.tags ? config.tags.map((t: Tag) => t.name) : [])
@@ -243,6 +247,8 @@ export default function EditConfigPage() {
         title: title.trim(),
         description: description.trim(),
         content: content.trim(),
+        installationGuide: installationGuide.trim() || null,
+        dependencies: dependencies.trim() || null,
         categoryId,
         modLoader,
         tags: selectedTags,
@@ -591,17 +597,45 @@ export default function EditConfigPage() {
           {/* Additional Details */}
           <Card>
             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Additional Details</h2>
-            <div>
-              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-                Installation Notes / Additional Information
-              </label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={6}
-                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
-                placeholder="Any special installation instructions or additional information..."
-              />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                  Additional Information
+                </label>
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={4}
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
+                  placeholder="Any extra details about your config..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                  Installation Guide
+                </label>
+                <textarea
+                  value={installationGuide}
+                  onChange={(e) => setInstallationGuide(e.target.value)}
+                  rows={4}
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
+                  placeholder="Step-by-step installation instructions..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                  Dependencies
+                </label>
+                <textarea
+                  value={dependencies}
+                  onChange={(e) => setDependencies(e.target.value)}
+                  rows={3}
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
+                  placeholder="List any required mods, plugins, or other dependencies..."
+                />
+              </div>
             </div>
           </Card>
 

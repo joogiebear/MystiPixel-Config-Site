@@ -217,6 +217,8 @@ export async function POST(request: NextRequest) {
       title,
       description,
       content,
+      installationGuide,
+      dependencies,
       categoryId,
       modLoader,
       tags, // Array of tag names (strings)
@@ -285,6 +287,8 @@ export async function POST(request: NextRequest) {
         title,
         description,
         content: content || '',
+        installationGuide: installationGuide || null,
+        dependencies: dependencies || null,
         categoryId,
         modLoader,
         isPremium: isPremium || false,

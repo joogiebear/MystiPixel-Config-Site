@@ -51,7 +51,9 @@ export default function UploadPage() {
     modLoader: '',
     isPremium: false,
     price: '',
-    content: '', // Additional notes/installation instructions
+    content: '', // Additional information
+    installationGuide: '', // Installation instructions
+    dependencies: '', // Required mods/plugins
   })
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]) // Array of tag names
@@ -222,6 +224,8 @@ export default function UploadPage() {
         title: formData.title,
         description: formData.description,
         content: formData.content,
+        installationGuide: formData.installationGuide || null,
+        dependencies: formData.dependencies || null,
         categoryId: formData.categoryId,
         modLoader: formData.modLoader,
         tags: selectedTags, // Send tag names, API will auto-create if needed
@@ -630,14 +634,40 @@ export default function UploadPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-                    Installation Instructions & Notes
+                    Additional Information
                   </label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    rows={6}
+                    rows={4}
                     className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
-                    placeholder="Provide installation instructions, compatibility notes, or any other important information..."
+                    placeholder="Any extra details about your config..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                    Installation Guide
+                  </label>
+                  <textarea
+                    value={formData.installationGuide}
+                    onChange={(e) => setFormData({ ...formData, installationGuide: e.target.value })}
+                    rows={4}
+                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
+                    placeholder="Step-by-step installation instructions..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                    Dependencies
+                  </label>
+                  <textarea
+                    value={formData.dependencies}
+                    onChange={(e) => setFormData({ ...formData, dependencies: e.target.value })}
+                    rows={3}
+                    className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none resize-none"
+                    placeholder="List any required mods, plugins, or other dependencies..."
                   />
                 </div>
               </div>

@@ -145,6 +145,8 @@ export async function PATCH(
       title,
       description,
       content,
+      installationGuide,
+      dependencies,
       categoryId,
       modLoader,
       tags, // Array of tag names (strings)
@@ -238,6 +240,8 @@ export async function PATCH(
         title,
         description,
         content: content || '',
+        installationGuide: installationGuide !== undefined ? installationGuide : existingConfig.installationGuide,
+        dependencies: dependencies !== undefined ? dependencies : existingConfig.dependencies,
         categoryId,
         modLoader,
         isPremium: isPremium || false,
