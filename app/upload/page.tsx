@@ -28,7 +28,7 @@ interface GameMode {
   description: string | null
 }
 
-interface MinecraftVersion {
+interface SupportedVersion {
   id: string
   version: string
 }
@@ -39,7 +39,7 @@ export default function UploadPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
-  const [minecraftVersions, setMinecraftVersions] = useState<MinecraftVersion[]>([])
+  const [supportedVersions, setSupportedVersions] = useState<SupportedVersion[]>([])
   const [loading, setLoading] = useState(false)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +48,7 @@ export default function UploadPage() {
     title: '',
     description: '',
     categoryId: '',
-    modLoader: '',
+    supportedSoftware: '',
     isPremium: false,
     price: '',
     content: '', // Additional information
@@ -60,7 +60,7 @@ export default function UploadPage() {
   const [tagInput, setTagInput] = useState('')
   const [showTagSuggestions, setShowTagSuggestions] = useState(false)
   const [selectedGameModeIds, setSelectedGameModeIds] = useState<string[]>([])
-  const [selectedMinecraftVersionIds, setSelectedMinecraftVersionIds] = useState<string[]>([])
+  const [selectedSupportedVersionIds, setSelectedSupportedVersionIds] = useState<string[]>([])
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileUrl, setFileUrl] = useState<string | null>(null)
@@ -68,7 +68,7 @@ export default function UploadPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
 
-  const modLoaders = ['FORGE', 'FABRIC', 'NEOFORGE', 'QUILT', 'VANILLA']
+  const supportedSoftwareOptions = ['BUKKIT', 'SPIGOT', 'PAPER', 'SPONGE', 'BUNGEE', 'FOLIA', 'VELOCITY', 'MINESTOM', 'PURPUR', 'MOHIST', 'ARCLIGHT']
 
   // Tag handling functions
   const addTag = (tagName: string) => {
@@ -137,19 +137,19 @@ export default function UploadPage() {
     }
   }, [status, router])
 
-  // Fetch categories, tags, game modes, and minecraft versions
+  // Fetch categories, tags, game modes, and supported versions
   useEffect(() => {
     Promise.all([
       fetch('/api/categories').then(res => res.json()),
       fetch('/api/tags').then(res => res.json()),
       fetch('/api/game-modes').then(res => res.json()),
-      fetch('/api/minecraft-versions').then(res => res.json())
+      fetch('/api/supported-versions').then(res => res.json())
     ])
       .then(([categoriesData, tagsData, gameModesData, versionsData]) => {
         setCategories(categoriesData.categories || [])
         setTags(tagsData.tags || [])
         setGameModes(gameModesData.gameModes || [])
-        setMinecraftVersions(versionsData.versions || [])
+        setSupportedVersions(versionsData.versions || [])
       })
       .catch(err => console.error('Failed to load data:', err))
   }, [])
@@ -211,8 +211,8 @@ export default function UploadPage() {
         throw new Error('Please upload a config file')
       }
 
-      if (selectedMinecraftVersionIds.length === 0) {
-        throw new Error('Please select at least one Minecraft version')
+      if (selectedSupportedVersionIds.length === 0) {
+        throw new Error('Please select at least one supported version')
       }
 
       if (formData.isPremium && (!formData.price || parseFloat(formData.price) < 0.99)) {
@@ -227,10 +227,10 @@ export default function UploadPage() {
         installationGuide: formData.installationGuide || null,
         dependencies: formData.dependencies || null,
         categoryId: formData.categoryId,
-        modLoader: formData.modLoader,
+        supportedSoftware: formData.supportedSoftware,
         tags: selectedTags, // Send tag names, API will auto-create if needed
         gameModeIds: selectedGameModeIds,
-        minecraftVersionIds: selectedMinecraftVersionIds,
+        supportedVersionIds: selectedSupportedVersionIds,
         isPremium: formData.isPremium,
         price: formData.isPremium ? parseFloat(formData.price) : null,
         fileUrl: fileUrl,
@@ -352,18 +352,18 @@ export default function UploadPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-                      Mod Loader *
+                      Supported Software *
                     </label>
                     <select
                       required
-                      value={formData.modLoader}
-                      onChange={(e) => setFormData({ ...formData, modLoader: e.target.value })}
+                      value={formData.supportedSoftware}
+                      onChange={(e) => setFormData({ ...formData, supportedSoftware: e.target.value })}
                       className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
                     >
-                      <option value="">Select mod loader</option>
-                      {modLoaders.map((loader) => (
-                        <option key={loader} value={loader}>
-                          {loader.charAt(0) + loader.slice(1).toLowerCase()}
+                      <option value="">Select supported software</option>
+                      {supportedSoftwareOptions.map((software) => (
+                        <option key={software} value={software}>
+                          {software.charAt(0) + software.slice(1).toLowerCase()}
                         </option>
                       ))}
                     </select>
@@ -372,25 +372,25 @@ export default function UploadPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
-                    Minecraft Versions * (Select all that apply)
+                    Supported Versions * (Select all that apply)
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto p-3 bg-[var(--surface-light)] border border-[var(--border)] rounded-lg">
-                    {minecraftVersions.length === 0 ? (
+                    {supportedVersions.length === 0 ? (
                       <p className="text-sm text-[var(--text-secondary)] col-span-full">Loading versions...</p>
                     ) : (
-                      minecraftVersions.map((version) => (
+                      supportedVersions.map((version) => (
                         <label
                           key={version.id}
                           className="flex items-center gap-2 cursor-pointer hover:bg-[var(--surface)] p-2 rounded transition-colors"
                         >
                           <input
                             type="checkbox"
-                            checked={selectedMinecraftVersionIds.includes(version.id)}
+                            checked={selectedSupportedVersionIds.includes(version.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedMinecraftVersionIds([...selectedMinecraftVersionIds, version.id])
+                                setSelectedSupportedVersionIds([...selectedSupportedVersionIds, version.id])
                               } else {
-                                setSelectedMinecraftVersionIds(selectedMinecraftVersionIds.filter(id => id !== version.id))
+                                setSelectedSupportedVersionIds(selectedSupportedVersionIds.filter(id => id !== version.id))
                               }
                             }}
                             className="w-4 h-4 bg-[var(--surface-light)] border border-[var(--border)] rounded focus:ring-2 focus:ring-[var(--primary)]"
@@ -400,9 +400,9 @@ export default function UploadPage() {
                       ))
                     )}
                   </div>
-                  {selectedMinecraftVersionIds.length > 0 && (
+                  {selectedSupportedVersionIds.length > 0 && (
                     <p className="text-sm text-[var(--text-secondary)] mt-2">
-                      {selectedMinecraftVersionIds.length} version(s) selected
+                      {selectedSupportedVersionIds.length} version(s) selected
                     </p>
                   )}
                 </div>

@@ -24,7 +24,7 @@ interface GameMode {
   _count: { configs: number }
 }
 
-interface MinecraftVersion {
+interface SupportedVersion {
   id: string
   version: string
   _count: { configs: number }
@@ -46,7 +46,7 @@ export default function AdminPage() {
 
   const [categories, setCategories] = useState<Category[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
-  const [versions, setVersions] = useState<MinecraftVersion[]>([])
+  const [versions, setVersions] = useState<SupportedVersion[]>([])
   const [tags, setTags] = useState<Tag[]>([])
 
   const [loading, setLoading] = useState(true)
@@ -111,7 +111,7 @@ export default function AdminPage() {
 
   const fetchVersions = async () => {
     try {
-      const res = await fetch('/api/admin/minecraft-versions')
+      const res = await fetch('/api/admin/supported-versions')
       if (res.ok) {
         const data = await res.json()
         setVersions(data.versions || [])
@@ -151,7 +151,7 @@ export default function AdminPage() {
         body = { name: formData.name, slug: formData.slug, description: formData.description, icon: formData.icon }
         break
       case 'versions':
-        url = '/api/admin/minecraft-versions'
+        url = '/api/admin/supported-versions'
         body = { version: formData.version }
         break
       case 'tags':
@@ -206,7 +206,7 @@ export default function AdminPage() {
     switch (activeTab) {
       case 'categories': url = `/api/admin/categories/${id}`; break
       case 'game-modes': url = `/api/admin/game-modes/${id}`; break
-      case 'versions': url = `/api/admin/minecraft-versions/${id}`; break
+      case 'versions': url = `/api/admin/supported-versions/${id}`; break
       case 'tags': url = `/api/admin/tags/${id}`; break
     }
 

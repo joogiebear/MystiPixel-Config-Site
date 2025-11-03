@@ -26,7 +26,7 @@ interface GameMode {
   icon: string | null
 }
 
-interface MinecraftVersion {
+interface SupportedVersion {
   id: string
   version: string
 }
@@ -47,10 +47,10 @@ export default function EditConfigPage() {
   const [installationGuide, setInstallationGuide] = useState('')
   const [dependencies, setDependencies] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [modLoader, setModLoader] = useState('FORGE')
+  const [supportedSoftware, setSupportedSoftware] = useState('FORGE')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedGameModes, setSelectedGameModes] = useState<string[]>([])
-  const [selectedMinecraftVersions, setSelectedMinecraftVersions] = useState<string[]>([])
+  const [selectedSupportedVersions, setSelectedSupportedVersions] = useState<string[]>([])
   const [isPremium, setIsPremium] = useState(false)
   const [price, setPrice] = useState('')
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -65,7 +65,7 @@ export default function EditConfigPage() {
   // Available options
   const [categories, setCategories] = useState<Category[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
-  const [minecraftVersions, setMinecraftVersions] = useState<MinecraftVersion[]>([])
+  const [supportedVersions, setSupportedVersions] = useState<SupportedVersion[]>([])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function EditConfigPage() {
           fetch(`/api/configs/${params.id}`),
           fetch('/api/categories'),
           fetch('/api/game-modes'),
-          fetch('/api/minecraft-versions')
+          fetch('/api/supported-versions')
         ])
 
         if (!configRes.ok) {
@@ -113,10 +113,10 @@ export default function EditConfigPage() {
         setInstallationGuide(config.installationGuide || '')
         setDependencies(config.dependencies || '')
         setCategoryId(config.category.id)
-        setModLoader(config.modLoader)
+        setSupportedSoftware(config.supportedSoftware)
         setSelectedTags(config.tags ? config.tags.map((t: Tag) => t.name) : [])
         setSelectedGameModes(config.gameModes ? config.gameModes.map((gm: GameMode) => gm.id) : [])
-        setSelectedMinecraftVersions(config.minecraftVersions ? config.minecraftVersions.map((v: MinecraftVersion) => v.id) : [])
+        setSelectedSupportedVersions(config.supportedVersions ? config.supportedVersions.map((v: SupportedVersion) => v.id) : [])
         setIsPremium(config.isPremium)
         setPrice(config.price?.toString() || '')
         setExistingImageUrl(config.imageUrl)
@@ -127,7 +127,7 @@ export default function EditConfigPage() {
         // Set available options
         setCategories(categoriesData.categories || [])
         setGameModes(gameModesData.gameModes || [])
-        setMinecraftVersions(versionsData.versions || [])
+        setSupportedVersions(versionsData.versions || [])
 
         setLoading(false)
       } catch (err: any) {
@@ -237,7 +237,7 @@ export default function EditConfigPage() {
       if (!title.trim()) throw new Error('Title is required')
       if (!description.trim()) throw new Error('Description is required')
       if (!categoryId) throw new Error('Please select a category')
-      if (selectedMinecraftVersions.length === 0) throw new Error('Please select at least one Minecraft version')
+      if (selectedSupportedVersions.length === 0) throw new Error('Please select at least one supported version')
       if (isPremium && (!price || parseFloat(price) < 0.99)) {
         throw new Error('Premium configs must have a price of at least $0.99')
       }
@@ -250,10 +250,10 @@ export default function EditConfigPage() {
         installationGuide: installationGuide.trim() || null,
         dependencies: dependencies.trim() || null,
         categoryId,
-        modLoader,
+        supportedSoftware,
         tags: selectedTags,
         gameModeIds: selectedGameModes,
-        minecraftVersionIds: selectedMinecraftVersions,
+        supportedVersionIds: selectedSupportedVersions,
         isPremium,
         price: isPremium ? parseFloat(price) : null,
         imageUrl: removeImage ? null : (imagePreview || existingImageUrl),
@@ -370,19 +370,25 @@ export default function EditConfigPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-                    Mod Loader *
+                    Supported Software *
                   </label>
                   <select
-                    value={modLoader}
-                    onChange={(e) => setModLoader(e.target.value)}
+                    value={supportedSoftware}
+                    onChange={(e) => setSupportedSoftware(e.target.value)}
                     className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
                     required
                   >
-                    <option value="FORGE">Forge</option>
-                    <option value="FABRIC">Fabric</option>
-                    <option value="NEOFORGE">NeoForge</option>
-                    <option value="QUILT">Quilt</option>
-                    <option value="VANILLA">Vanilla</option>
+                    <option value="BUKKIT">Bukkit</option>
+                    <option value="SPIGOT">Spigot</option>
+                    <option value="PAPER">Paper</option>
+                    <option value="SPONGE">Sponge</option>
+                    <option value="BUNGEE">BungeeCord</option>
+                    <option value="FOLIA">Folia</option>
+                    <option value="VELOCITY">Velocity</option>
+                    <option value="MINESTOM">Minestom</option>
+                    <option value="PURPUR">Purpur</option>
+                    <option value="MOHIST">Mohist</option>
+                    <option value="ARCLIGHT">Arclight</option>
                   </select>
                 </div>
               </div>
@@ -488,27 +494,27 @@ export default function EditConfigPage() {
             </div>
           </Card>
 
-          {/* Minecraft Versions */}
+          {/* Supported Versions */}
           <Card>
-            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Minecraft Versions *</h2>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Supported Versions *</h2>
             <div className="flex flex-wrap gap-2">
-              {minecraftVersions.map((version) => (
+              {supportedVersions.map((version) => (
                 <label
                   key={version.id}
                   className={`cursor-pointer px-4 py-2 rounded-lg border transition-all ${
-                    selectedMinecraftVersions.includes(version.id)
+                    selectedSupportedVersions.includes(version.id)
                       ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
                       : 'bg-[var(--surface)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={selectedMinecraftVersions.includes(version.id)}
+                    checked={selectedSupportedVersions.includes(version.id)}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedMinecraftVersions([...selectedMinecraftVersions, version.id])
+                        setSelectedSupportedVersions([...selectedSupportedVersions, version.id])
                       } else {
-                        setSelectedMinecraftVersions(selectedMinecraftVersions.filter(id => id !== version.id))
+                        setSelectedSupportedVersions(selectedSupportedVersions.filter(id => id !== version.id))
                       }
                     }}
                     className="hidden"

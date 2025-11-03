@@ -22,7 +22,7 @@ interface Config {
     slug: string
     icon: string | null
   }
-  modLoader: string
+  supportedSoftware: string
   isPremium: boolean
   price: number | null
   downloads: number
@@ -31,7 +31,7 @@ interface Config {
   downloadCount: number
   tags: Array<{ id: string; name: string; slug: string }>
   gameModes: Array<{ id: string; name: string; slug: string; icon: string | null }>
-  minecraftVersions: Array<{ id: string; version: string }>
+  supportedVersions: Array<{ id: string; version: string }>
 }
 
 interface Tag {
@@ -48,7 +48,7 @@ interface GameMode {
   icon: string | null
 }
 
-interface MinecraftVersion {
+interface SupportedVersion {
   id: string
   version: string
 }
@@ -65,7 +65,7 @@ interface PaginationData {
 export default function BrowsePage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedModLoader, setSelectedModLoader] = useState<string>('all')
+  const [selectedSupportedSoftware, setSelectedSupportedSoftware] = useState<string>('all')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState('recent')
   const [currentPage, setCurrentPage] = useState(1)
@@ -79,25 +79,25 @@ export default function BrowsePage() {
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
-  const [minecraftVersions, setMinecraftVersions] = useState<MinecraftVersion[]>([])
+  const [supportedVersions, setSupportedVersions] = useState<SupportedVersion[]>([])
 
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedGameModes, setSelectedGameModes] = useState<string[]>([])
-  const [selectedMinecraftVersions, setSelectedMinecraftVersions] = useState<string[]>([])
+  const [selectedSupportedVersions, setSelectedSupportedVersions] = useState<string[]>([])
 
-  // Fetch categories, tags, game modes, and minecraft versions
+  // Fetch categories, tags, game modes, and supported versions
   useEffect(() => {
     Promise.all([
       fetch('/api/categories').then(res => res.json()),
       fetch('/api/tags').then(res => res.json()),
       fetch('/api/game-modes').then(res => res.json()),
-      fetch('/api/minecraft-versions').then(res => res.json())
+      fetch('/api/supported-versions').then(res => res.json())
     ])
       .then(([categoriesData, tagsData, gameModesData, versionsData]) => {
         setCategories(categoriesData.categories || [])
         setTags(tagsData.tags || [])
         setGameModes(gameModesData.gameModes || [])
-        setMinecraftVersions(versionsData.versions || [])
+        setSupportedVersions(versionsData.versions || [])
       })
       .catch(err => console.error('Failed to load data:', err))
   }, [])
@@ -115,11 +115,11 @@ export default function BrowsePage() {
       })
 
       if (searchQuery) params.append('search', searchQuery)
-      if (selectedModLoader !== 'all') params.append('modLoader', selectedModLoader.toUpperCase())
+      if (selectedSupportedSoftware !== 'all') params.append('supportedSoftware', selectedSupportedSoftware.toUpperCase())
       if (selectedCategory !== 'all') params.append('category', selectedCategory)
       if (selectedTags.length > 0) params.append('tags', selectedTags.join(','))
       if (selectedGameModes.length > 0) params.append('gameModes', selectedGameModes.join(','))
-      if (selectedMinecraftVersions.length > 0) params.append('minecraftVersions', selectedMinecraftVersions.join(','))
+      if (selectedSupportedVersions.length > 0) params.append('supportedVersions', selectedSupportedVersions.join(','))
 
       try {
         const res = await fetch(`/api/configs?${params}`)
@@ -142,9 +142,9 @@ export default function BrowsePage() {
     }, searchQuery ? 500 : 0)
 
     return () => clearTimeout(timer)
-  }, [searchQuery, selectedModLoader, selectedCategory, sortBy, currentPage, selectedTags, selectedGameModes, selectedMinecraftVersions])
+  }, [searchQuery, selectedSupportedSoftware, selectedCategory, sortBy, currentPage, selectedTags, selectedGameModes, selectedSupportedVersions])
 
-  const modLoaders = ['All', 'Forge', 'Fabric', 'NeoForge', 'Quilt', 'Vanilla']
+  const supportedSoftwareOptions = ['All', 'Bukkit', 'Spigot', 'Paper', 'Sponge', 'Bungee', 'Folia', 'Velocity', 'Minestom', 'Purpur', 'Mohist', 'Arclight']
 
   // Get top 10 popular tags
   const popularTags = tags.slice(0, 10).filter(tag => tag.usageCount && tag.usageCount > 0)
@@ -208,22 +208,22 @@ export default function BrowsePage() {
 
           {/* Basic Filters */}
           <div className="grid md:grid-cols-3 gap-4">
-            {/* Mod Loader Filter */}
+            {/* Supported Software Filter */}
             <div>
               <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-                Mod Loader
+                Supported Software
               </label>
               <select
-                value={selectedModLoader}
+                value={selectedSupportedSoftware}
                 onChange={(e) => {
-                  setSelectedModLoader(e.target.value)
+                  setSelectedSupportedSoftware(e.target.value)
                   setCurrentPage(1)
                 }}
                 className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
               >
-                {modLoaders.map((loader) => (
-                  <option key={loader} value={loader.toLowerCase()}>
-                    {loader}
+                {supportedSoftwareOptions.map((software) => (
+                  <option key={software} value={software.toLowerCase()}>
+                    {software}
                   </option>
                 ))}
               </select>
@@ -275,9 +275,9 @@ export default function BrowsePage() {
             className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium flex items-center gap-2"
           >
             {showAdvancedFilters ? '▼' : '▶'} Advanced Filters
-            {(selectedTags.length > 0 || selectedGameModes.length > 0 || selectedMinecraftVersions.length > 0) && (
+            {(selectedTags.length > 0 || selectedGameModes.length > 0 || selectedSupportedVersions.length > 0) && (
               <Badge variant="primary" className="ml-1">
-                {selectedTags.length + selectedGameModes.length + selectedMinecraftVersions.length}
+                {selectedTags.length + selectedGameModes.length + selectedSupportedVersions.length}
               </Badge>
             )}
           </button>
@@ -285,29 +285,29 @@ export default function BrowsePage() {
           {/* Advanced Filters */}
           {showAdvancedFilters && (
             <div className="space-y-4 p-4 bg-[var(--surface)] border border-[var(--border)] rounded-lg">
-              {/* Minecraft Versions */}
+              {/* Supported Versions */}
               <div>
                 <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
-                  Minecraft Versions
+                  Supported Versions
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {minecraftVersions.map((version) => (
+                  {supportedVersions.map((version) => (
                     <label
                       key={version.id}
                       className={`cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-all ${
-                        selectedMinecraftVersions.includes(version.id)
+                        selectedSupportedVersions.includes(version.id)
                           ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
                           : 'bg-[var(--surface-light)] border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]'
                       }`}
                     >
                       <input
                         type="checkbox"
-                        checked={selectedMinecraftVersions.includes(version.id)}
+                        checked={selectedSupportedVersions.includes(version.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedMinecraftVersions([...selectedMinecraftVersions, version.id])
+                            setSelectedSupportedVersions([...selectedSupportedVersions, version.id])
                           } else {
-                            setSelectedMinecraftVersions(selectedMinecraftVersions.filter(id => id !== version.id))
+                            setSelectedSupportedVersions(selectedSupportedVersions.filter(id => id !== version.id))
                           }
                           setCurrentPage(1)
                         }}
@@ -394,14 +394,14 @@ export default function BrowsePage() {
               </div>
 
               {/* Clear Filters */}
-              {(selectedTags.length > 0 || selectedGameModes.length > 0 || selectedMinecraftVersions.length > 0) && (
+              {(selectedTags.length > 0 || selectedGameModes.length > 0 || selectedSupportedVersions.length > 0) && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSelectedTags([])
                     setSelectedGameModes([])
-                    setSelectedMinecraftVersions([])
+                    setSelectedSupportedVersions([])
                     setCurrentPage(1)
                   }}
                 >
@@ -491,12 +491,12 @@ export default function BrowsePage() {
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="primary">{config.modLoader}</Badge>
-                  {config.minecraftVersions && config.minecraftVersions.slice(0, 2).map((version) => (
+                  <Badge variant="primary">{config.supportedSoftware}</Badge>
+                  {config.supportedVersions && config.supportedVersions.slice(0, 2).map((version) => (
                     <Badge key={version.id} variant="secondary">{version.version}</Badge>
                   ))}
-                  {config.minecraftVersions && config.minecraftVersions.length > 2 && (
-                    <Badge variant="secondary">+{config.minecraftVersions.length - 2}</Badge>
+                  {config.supportedVersions && config.supportedVersions.length > 2 && (
+                    <Badge variant="secondary">+{config.supportedVersions.length - 2}</Badge>
                   )}
                   {config.gameModes && config.gameModes.slice(0, 2).map((mode) => (
                     <Badge key={mode.id} variant="accent">{mode.icon || ''} {mode.name}</Badge>

@@ -1,4 +1,4 @@
-import { PrismaClient, ModLoader } from '@prisma/client'
+import { PrismaClient, SupportedSoftware } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -76,22 +76,62 @@ async function main() {
   // Create sample game modes
   const gameModes = await Promise.all([
     prisma.gameMode.create({ data: { name: 'Survival', slug: 'survival', icon: '⛏️', description: 'Classic survival gameplay' } }),
+    prisma.gameMode.create({ data: { name: 'Factions', slug: 'factions', icon: '⚔️', description: 'Team-based PvP with land claiming' } }),
+    prisma.gameMode.create({ data: { name: 'Skyblock', slug: 'skyblock', icon: '🏝️', description: 'Sky island survival challenge' } }),
+    prisma.gameMode.create({ data: { name: 'Oneblock', slug: 'oneblock', icon: '🟦', description: 'Start with just one block' } }),
+    prisma.gameMode.create({ data: { name: 'Prison', slug: 'prison', icon: '⛏️', description: 'Mine and rank up through prison tiers' } }),
     prisma.gameMode.create({ data: { name: 'Creative', slug: 'creative', icon: '🎨', description: 'Unlimited building mode' } }),
-    prisma.gameMode.create({ data: { name: 'PvP', slug: 'pvp', icon: '⚔️', description: 'Player vs Player combat' } }),
-    prisma.gameMode.create({ data: { name: 'Skyblock', slug: 'skyblock', icon: '🏝️', description: 'Sky island survival' } })
+    prisma.gameMode.create({ data: { name: 'Towny', slug: 'towny', icon: '🏘️', description: 'Build and manage towns' } }),
+    prisma.gameMode.create({ data: { name: 'Earth', slug: 'earth', icon: '🌍', description: 'Earth-based survival' } }),
+    prisma.gameMode.create({ data: { name: 'Gens', slug: 'gens', icon: '⚡', description: 'Generator-based economy' } }),
+    prisma.gameMode.create({ data: { name: 'Hub & Lobby', slug: 'hub-lobby', icon: '🏛️', description: 'Server hub and lobby configs' } }),
+    prisma.gameMode.create({ data: { name: 'Minigame', slug: 'minigame', icon: '🎮', description: 'Mini-game servers' } }),
+    prisma.gameMode.create({ data: { name: 'Pixelmon & Cobblemon', slug: 'pixelmon-cobblemon', icon: '🔴', description: 'Pokemon-style gameplay' } }),
+    prisma.gameMode.create({ data: { name: 'Lifesteal', slug: 'lifesteal', icon: '❤️', description: 'Steal hearts from other players' } }),
+    prisma.gameMode.create({ data: { name: 'UHC', slug: 'uhc', icon: '💀', description: 'Ultra Hardcore survival' } }),
+    prisma.gameMode.create({ data: { name: 'KitPVP', slug: 'kitpvp', icon: '🗡️', description: 'PvP with preset kits' } }),
+    prisma.gameMode.create({ data: { name: 'BoxPVP', slug: 'boxpvp', icon: '📦', description: 'Small arena PvP' } }),
+    prisma.gameMode.create({ data: { name: 'Practice', slug: 'practice', icon: '🥊', description: 'Practice PvP combat' } }),
+    prisma.gameMode.create({ data: { name: 'Bedwars', slug: 'bedwars', icon: '🛏️', description: 'Protect your bed, destroy others' } }),
+    prisma.gameMode.create({ data: { name: 'Skywars', slug: 'skywars', icon: '☁️', description: 'Sky island PvP battle' } }),
+    prisma.gameMode.create({ data: { name: 'Anarchy', slug: 'anarchy', icon: '🔥', description: 'No rules survival' } }),
+    prisma.gameMode.create({ data: { name: 'CityBuild', slug: 'citybuild', icon: '🏙️', description: 'Build cities and communities' } }),
+    prisma.gameMode.create({ data: { name: 'Clicker', slug: 'clicker', icon: '👆', description: 'Click-based gameplay' } }),
+    prisma.gameMode.create({ data: { name: 'Donut-like', slug: 'donut-like', icon: '🍩', description: 'Donut SMP style servers' } }),
+    prisma.gameMode.create({ data: { name: 'Economy', slug: 'economy', icon: '💰', description: 'Economy-focused gameplay' } }),
+    prisma.gameMode.create({ data: { name: 'Modded', slug: 'modded', icon: '🔧', description: 'Modded server configs' } }),
+    prisma.gameMode.create({ data: { name: 'Hardcore', slug: 'hardcore', icon: '☠️', description: 'Hardcore difficulty mode' } }),
+    prisma.gameMode.create({ data: { name: 'Parkour', slug: 'parkour', icon: '🏃', description: 'Parkour and jumping challenges' } }),
+    prisma.gameMode.create({ data: { name: 'Roleplay', slug: 'roleplay', icon: '🎭', description: 'Roleplay servers' } })
   ])
 
   console.log('Created game modes')
 
-  // Create sample minecraft versions
-  const mcVersions = await Promise.all([
-    prisma.minecraftVersion.create({ data: { version: '1.20.4' } }),
-    prisma.minecraftVersion.create({ data: { version: '1.20.1' } }),
-    prisma.minecraftVersion.create({ data: { version: '1.19.4' } }),
-    prisma.minecraftVersion.create({ data: { version: '1.16.5' } })
+  // Create supported versions
+  const supportedVersions = await Promise.all([
+    prisma.supportedVersion.create({ data: { version: '1.21.9' } }),
+    prisma.supportedVersion.create({ data: { version: '1.21.8' } }),
+    prisma.supportedVersion.create({ data: { version: '1.21.5' } }),
+    prisma.supportedVersion.create({ data: { version: '1.21.4' } }),
+    prisma.supportedVersion.create({ data: { version: '1.21.2' } }),
+    prisma.supportedVersion.create({ data: { version: '1.21' } }),
+    prisma.supportedVersion.create({ data: { version: '1.20' } }),
+    prisma.supportedVersion.create({ data: { version: '1.19' } }),
+    prisma.supportedVersion.create({ data: { version: '1.18' } }),
+    prisma.supportedVersion.create({ data: { version: '1.17' } }),
+    prisma.supportedVersion.create({ data: { version: '1.16' } }),
+    prisma.supportedVersion.create({ data: { version: '1.15' } }),
+    prisma.supportedVersion.create({ data: { version: '1.14' } }),
+    prisma.supportedVersion.create({ data: { version: '1.13' } }),
+    prisma.supportedVersion.create({ data: { version: '1.12' } }),
+    prisma.supportedVersion.create({ data: { version: '1.11' } }),
+    prisma.supportedVersion.create({ data: { version: '1.10' } }),
+    prisma.supportedVersion.create({ data: { version: '1.9' } }),
+    prisma.supportedVersion.create({ data: { version: '1.8' } }),
+    prisma.supportedVersion.create({ data: { version: '1.7' } })
   ])
 
-  console.log('Created minecraft versions')
+  console.log('Created supported versions')
 
   // Create sample users
   const hashedPassword = await bcrypt.hash('password123', 12)
@@ -134,7 +174,7 @@ async function main() {
       description: 'Boost your FPS by up to 200% with this carefully optimized configuration pack. This comprehensive config bundle includes optimized settings for all major performance mods.',
       content: 'Sample config content here...',
       categoryId: categories[0].id,
-      modLoader: ModLoader.FORGE,
+      supportedSoftware: SupportedSoftware.PAPER,
       isPremium: true,
       price: 4.99,
       downloads: 12500,
@@ -147,9 +187,9 @@ async function main() {
           { id: tags[2].id }
         ]
       },
-      minecraftVersions: {
+      supportedVersions: {
         connect: [
-          { id: mcVersions[1].id } // 1.20.1
+          { id: supportedVersions[6].id } // 1.20
         ]
       },
       gameModes: {
@@ -166,7 +206,7 @@ async function main() {
       description: 'Complete server optimization for large player counts and minimal lag. Perfect for SMP servers.',
       content: 'Sample server config...',
       categoryId: categories[1].id,
-      modLoader: ModLoader.FABRIC,
+      supportedSoftware: SupportedSoftware.SPIGOT,
       isPremium: false,
       downloads: 8200,
       views: 15000,
@@ -177,9 +217,9 @@ async function main() {
           { id: tags[4].id }
         ]
       },
-      minecraftVersions: {
+      supportedVersions: {
         connect: [
-          { id: mcVersions[1].id } // 1.20.1
+          { id: supportedVersions[6].id } // 1.20
         ]
       },
       gameModes: {
@@ -196,7 +236,7 @@ async function main() {
       description: 'Play Minecraft smoothly on low-end hardware with these optimized settings.',
       content: 'Sample low-end config...',
       categoryId: categories[0].id,
-      modLoader: ModLoader.FORGE,
+      supportedSoftware: SupportedSoftware.BUKKIT,
       isPremium: false,
       downloads: 15600,
       views: 30000,
@@ -207,9 +247,9 @@ async function main() {
           { id: tags[1].id }
         ]
       },
-      minecraftVersions: {
+      supportedVersions: {
         connect: [
-          { id: mcVersions[2].id } // 1.19.4
+          { id: supportedVersions[7].id } // 1.19
         ]
       },
       gameModes: {

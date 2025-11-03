@@ -88,7 +88,7 @@ model Config {
   imageUrl           String?  @db.LongText
   category           Category @relation(fields: [categoryId], references: [id])
   categoryId         String
-  modLoader          ModLoader
+  supportedSoftware  SupportedSoftware
   isPremium          Boolean  @default(false)
   price              Float?
   downloads          Int      @default(0)
@@ -98,7 +98,7 @@ model Config {
   authorId    String
 
   tags              Tag[]
-  minecraftVersions MinecraftVersion[]
+  supportedVersions SupportedVersion[]
   gameModes         GameMode[]
   ratings           Rating[]
   comments          Comment[]
@@ -145,7 +145,7 @@ model Tag {
   createdAt DateTime @default(now())
 }
 
-model MinecraftVersion {
+model SupportedVersion {
   id        String   @id @default(cuid())
   version   String   @unique
   configs   Config[]
@@ -226,10 +226,16 @@ model Favorite {
   @@index([userId])
 }
 
-enum ModLoader {
-  FORGE
-  FABRIC
-  NEOFORGE
-  QUILT
-  VANILLA
+enum SupportedSoftware {
+  BUKKIT
+  SPIGOT
+  PAPER
+  SPONGE
+  BUNGEE
+  FOLIA
+  VELOCITY
+  MINESTOM
+  PURPUR
+  MOHIST
+  ARCLIGHT
 }

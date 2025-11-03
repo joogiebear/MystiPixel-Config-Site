@@ -14,14 +14,14 @@ export async function GET(request: NextRequest) {
 
     // Filters
     const category = searchParams.get('category');
-    const modLoader = searchParams.get('modLoader');
+    const supportedSoftware = searchParams.get('supportedSoftware');
     const isPremium = searchParams.get('isPremium');
     const search = searchParams.get('search');
     const authorId = searchParams.get('authorId');
     const sort = searchParams.get('sort') || 'recent';
     const tags = searchParams.get('tags'); // Comma-separated tag slugs
     const gameModes = searchParams.get('gameModes'); // Comma-separated game mode slugs
-    const minecraftVersions = searchParams.get('minecraftVersions'); // Comma-separated version IDs
+    const supportedVersions = searchParams.get('supportedVersions'); // Comma-separated version IDs
 
     // Build where clause
     const where: Prisma.ConfigWhereInput = {};
@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    if (modLoader) {
-      where.modLoader = modLoader as any;
+    if (supportedSoftware) {
+      where.supportedSoftware = supportedSoftware as any;
     }
 
     if (isPremium !== null && isPremium !== undefined) {
@@ -73,10 +73,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (minecraftVersions) {
-      const versionIds = minecraftVersions.split(',').filter(Boolean);
+    if (supportedVersions) {
+      const versionIds = supportedVersions.split(',').filter(Boolean);
       if (versionIds.length > 0) {
-        where.minecraftVersions = {
+        where.supportedVersions = {
           some: {
             id: { in: versionIds }
           }
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
               icon: true
             }
           },
-          minecraftVersions: {
+          supportedVersions: {
             select: {
               id: true,
               version: true
@@ -220,10 +220,10 @@ export async function POST(request: NextRequest) {
       installationGuide,
       dependencies,
       categoryId,
-      modLoader,
+      supportedSoftware,
       tags, // Array of tag names (strings)
       gameModeIds,
-      minecraftVersionIds,
+      supportedVersionIds,
       isPremium,
       price,
       features,
@@ -233,16 +233,16 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validation
-    if (!title || !description || !categoryId || !modLoader) {
+    if (!title || !description || !categoryId || !supportedSoftware) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    if (!minecraftVersionIds || minecraftVersionIds.length === 0) {
+    if (!supportedVersionIds || supportedVersionIds.length === 0) {
       return NextResponse.json(
-        { error: 'Please select at least one Minecraft version' },
+        { error: 'Please select at least one supported version' },
         { status: 400 }
       );
     }
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
         installationGuide: installationGuide || null,
         dependencies: dependencies || null,
         categoryId,
-        modLoader,
+        supportedSoftware,
         isPremium: isPremium || false,
         price: isPremium ? price : null,
         fileUrl: fileUrl || null,
@@ -302,8 +302,8 @@ export async function POST(request: NextRequest) {
         gameModes: gameModeIds && gameModeIds.length > 0 ? {
           connect: gameModeIds.map((id: string) => ({ id }))
         } : undefined,
-        minecraftVersions: {
-          connect: minecraftVersionIds.map((id: string) => ({ id }))
+        supportedVersions: {
+          connect: supportedVersionIds.map((id: string) => ({ id }))
         }
       },
       include: {
@@ -317,7 +317,7 @@ export async function POST(request: NextRequest) {
         category: true,
         tags: true,
         gameModes: true,
-        minecraftVersions: true
+        supportedVersions: true
       }
     });
 

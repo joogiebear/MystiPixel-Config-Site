@@ -153,10 +153,10 @@ export async function PATCH(
       installationGuide,
       dependencies,
       categoryId,
-      modLoader,
+      supportedSoftware,
       tags, // Array of tag names (strings)
       gameModeIds,
-      minecraftVersionIds,
+      supportedVersionIds,
       isPremium,
       price,
       imageUrl,
@@ -190,16 +190,16 @@ export async function PATCH(
     }
 
     // Validation
-    if (!title || !description || !categoryId || !modLoader) {
+    if (!title || !description || !categoryId || !supportedSoftware) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    if (!minecraftVersionIds || minecraftVersionIds.length === 0) {
+    if (!supportedVersionIds || supportedVersionIds.length === 0) {
       return NextResponse.json(
-        { error: 'Please select at least one Minecraft version' },
+        { error: 'Please select at least one Supported Version' },
         { status: 400 }
       );
     }
@@ -248,7 +248,7 @@ export async function PATCH(
         installationGuide: installationGuide !== undefined ? installationGuide : existingConfig.installationGuide,
         dependencies: dependencies !== undefined ? dependencies : existingConfig.dependencies,
         categoryId,
-        modLoader,
+        supportedSoftware,
         isPremium: isPremium || false,
         price: isPremium ? price : null,
         imageUrl: imageUrl !== undefined ? imageUrl : existingConfig.imageUrl,
@@ -262,9 +262,9 @@ export async function PATCH(
           set: [], // Clear existing
           connect: gameModeIds && gameModeIds.length > 0 ? gameModeIds.map((id: string) => ({ id })) : []
         },
-        minecraftVersions: {
+        supportedVersions: {
           set: [], // Clear existing
-          connect: minecraftVersionIds.map((id: string) => ({ id }))
+          connect: supportedVersionIds.map((id: string) => ({ id }))
         }
       },
       include: {
@@ -278,7 +278,7 @@ export async function PATCH(
         category: true,
         tags: true,
         gameModes: true,
-        minecraftVersions: true
+        supportedVersions: true
       }
     });
 

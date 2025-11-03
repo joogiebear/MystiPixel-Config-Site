@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth-helpers';
 
-// DELETE - Delete Minecraft version
+// DELETE - Delete Supported Version
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -12,7 +12,7 @@ export async function DELETE(
     const { id } = await params;
 
     const configCount = await prisma.config.count({
-      where: { minecraftVersions: { some: { id } } }
+      where: { supportedVersions: { some: { id } } }
     });
 
     if (configCount > 0) {
@@ -22,12 +22,12 @@ export async function DELETE(
       );
     }
 
-    await prisma.minecraftVersion.delete({ where: { id } });
+    await prisma.supportedVersion.delete({ where: { id } });
 
-    return NextResponse.json({ message: 'Minecraft version deleted successfully' });
+    return NextResponse.json({ message: 'Supported Version deleted successfully' });
 
   } catch (error) {
-    console.error('Error deleting Minecraft version:', error);
+    console.error('Error deleting Supported Version:', error);
 
     if (error instanceof Error && error.message.includes('Forbidden')) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
@@ -37,6 +37,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    return NextResponse.json({ error: 'Failed to delete Minecraft version' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete Supported Version' }, { status: 500 });
   }
 }

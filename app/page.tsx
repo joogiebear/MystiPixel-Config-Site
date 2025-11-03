@@ -21,8 +21,8 @@ interface Config {
     slug: string
     icon: string | null
   }
-  modLoader: string
-  mcVersion: string
+  supportedSoftware: string
+  supportedVersion: string
   isPremium: boolean
   price: number | null
   downloads: number
@@ -162,8 +162,8 @@ export default function Home() {
                 </div>
 
                 <div className="flex gap-2 mb-4">
-                  <Badge variant="primary">{config.modLoader}</Badge>
-                  <Badge variant="secondary">{config.mcVersion}</Badge>
+                  <Badge variant="primary">{config.supportedSoftware}</Badge>
+                  <Badge variant="secondary">{config.supportedVersion}</Badge>
                 </div>
 
                 <div className="mt-auto pt-4 border-t border-[var(--border)]">
