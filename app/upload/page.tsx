@@ -382,14 +382,14 @@ export default function UploadPage() {
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
                     Supported Versions * (Select all that apply)
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto p-3 bg-[var(--surface-light)] border border-[var(--border)] rounded-lg">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {supportedVersions.length === 0 ? (
-                      <p className="text-sm text-[var(--text-secondary)] col-span-full">Loading versions...</p>
+                      <p className="text-sm text-[var(--text-secondary)]">Loading versions...</p>
                     ) : (
                       supportedVersions.map((version) => (
                         <label
                           key={version.id}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-[var(--surface)] p-2 rounded transition-colors"
+                          className="flex items-center gap-3 cursor-pointer hover:bg-[var(--surface-light)] p-3 rounded-lg border border-[var(--border)] transition-colors"
                         >
                           <input
                             type="checkbox"
@@ -403,7 +403,7 @@ export default function UploadPage() {
                             }}
                             className="w-4 h-4 bg-[var(--surface-light)] border border-[var(--border)] rounded focus:ring-2 focus:ring-[var(--primary)]"
                           />
-                          <span className="text-sm text-[var(--text-primary)]">{version.version}</span>
+                          <span className="text-sm font-medium text-[var(--text-primary)]">{version.version}</span>
                         </label>
                       ))
                     )}
