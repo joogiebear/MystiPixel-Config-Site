@@ -202,7 +202,23 @@ export default function ConfigDetailPage() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${config.title}.zip`
+
+      // Get filename from Content-Disposition header or use fileUrl extension
+      const contentDisposition = response.headers.get('Content-Disposition')
+      let filename = `${config.title}.zip` // Default fallback
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      } else if (config.fileUrl) {
+        // Extract extension from fileUrl
+        const extension = config.fileUrl.split('.').pop() || 'zip'
+        filename = `${config.title}.${extension}`
+      }
+
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
