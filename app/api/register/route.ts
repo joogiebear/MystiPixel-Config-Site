@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { validatePassword, validateEmail, validateName, sanitizeInput } from '@/lib/validation'
 import { checkRegistrationRateLimit, recordRegistrationAttempt } from '@/lib/rate-limit'
+import { sendVerificationEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,8 +90,13 @@ export async function POST(request: NextRequest) {
     // Record registration attempt for rate limiting
     recordRegistrationAttempt(ip);
 
-    // TODO: Send verification email
-    // await sendVerificationEmail(user.email, user.id);
+    // Send verification email
+    try {
+      await sendVerificationEmail(user.email, user.id);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail registration if email fails - user can request new verification email
+    }
 
     return NextResponse.json({
       user: {
