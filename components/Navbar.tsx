@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Button from './ui/Button'
+import SearchBar from './SearchBar'
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -48,9 +49,11 @@ export default function Navbar() {
             <Link href="/marketplace" className="text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors">
               Marketplace
             </Link>
-            <Link href="/docs" className="text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors">
-              Docs
-            </Link>
+          </div>
+
+          {/* Search Bar */}
+          <div className="hidden md:block flex-1 max-w-md mx-8">
+            <SearchBar />
           </div>
 
           {/* Right side - Auth buttons or User menu */}
@@ -141,6 +144,11 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden border-t border-[var(--border)]">
           <div className="px-2 pt-2 pb-3 space-y-1">
+            {/* Mobile Search */}
+            <div className="px-3 py-2">
+              <SearchBar />
+            </div>
+
             <Link href="/browse" className="block px-3 py-2 text-[var(--text-secondary)] hover:text-[var(--primary)] hover:bg-[var(--surface-light)] rounded-md">
               Browse
             </Link>
