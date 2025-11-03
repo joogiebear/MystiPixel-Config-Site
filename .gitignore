@@ -47,3 +47,8 @@ next-env.d.ts
 
 # prisma config (uses env vars, should be generated on deploy)
 prisma.config.ts
+
+# Local deployment documentation
+DEPLOYMENT.md
+deployment-notes.md
+server-config.md
