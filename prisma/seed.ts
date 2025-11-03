@@ -1,10 +1,27 @@
-import { PrismaClient, SupportedSoftware } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
   console.log('Starting seed...')
+
+  // Create supported software options
+  const supportedSoftwareOptions = await Promise.all([
+    prisma.supportedSoftware.create({ data: { name: 'Bukkit', slug: 'bukkit', icon: '🪣', description: 'Classic Bukkit server software' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Spigot', slug: 'spigot', icon: '🔧', description: 'High-performance Bukkit fork' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Paper', slug: 'paper', icon: '📄', description: 'Optimized Spigot fork' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Sponge', slug: 'sponge', icon: '🧽', description: 'Plugin API for Minecraft' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Bungee', slug: 'bungee', icon: '🔗', description: 'BungeeCord proxy software' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Folia', slug: 'folia', icon: '🍃', description: 'Multi-threaded Paper fork' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Velocity', slug: 'velocity', icon: '⚡', description: 'Modern proxy software' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Minestom', slug: 'minestom', icon: '⚙️', description: 'Complete server rewrite' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Purpur', slug: 'purpur', icon: '💜', description: 'Feature-rich Paper fork' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Mohist', slug: 'mohist', icon: '🔥', description: 'Forge + Bukkit hybrid' } }),
+    prisma.supportedSoftware.create({ data: { name: 'Arclight', slug: 'arclight', icon: '🌟', description: 'Forge + Bukkit implementation' } })
+  ])
+
+  console.log('Created supported software options')
 
   // Create sample categories
   const categories = await Promise.all([
@@ -174,7 +191,7 @@ async function main() {
       description: 'Boost your FPS by up to 200% with this carefully optimized configuration pack. This comprehensive config bundle includes optimized settings for all major performance mods.',
       content: 'Sample config content here...',
       categoryId: categories[0].id,
-      supportedSoftware: SupportedSoftware.PAPER,
+      supportedSoftwareId: supportedSoftwareOptions[2].id, // Paper
       isPremium: true,
       price: 4.99,
       downloads: 12500,
@@ -206,7 +223,7 @@ async function main() {
       description: 'Complete server optimization for large player counts and minimal lag. Perfect for SMP servers.',
       content: 'Sample server config...',
       categoryId: categories[1].id,
-      supportedSoftware: SupportedSoftware.SPIGOT,
+      supportedSoftwareId: supportedSoftwareOptions[1].id, // Spigot
       isPremium: false,
       downloads: 8200,
       views: 15000,
@@ -236,7 +253,7 @@ async function main() {
       description: 'Play Minecraft smoothly on low-end hardware with these optimized settings.',
       content: 'Sample low-end config...',
       categoryId: categories[0].id,
-      supportedSoftware: SupportedSoftware.BUKKIT,
+      supportedSoftwareId: supportedSoftwareOptions[0].id, // Bukkit
       isPremium: false,
       downloads: 15600,
       views: 30000,

@@ -82,6 +82,28 @@ export async function GET(
             createdAt: 'desc'
           }
         },
+        supportedSoftware: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            icon: true
+          }
+        },
+        gameModes: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            icon: true
+          }
+        },
+        supportedVersions: {
+          select: {
+            id: true,
+            version: true
+          }
+        },
         _count: {
           select: {
             downloadRecords: true,
@@ -153,7 +175,7 @@ export async function PATCH(
       installationGuide,
       dependencies,
       categoryId,
-      supportedSoftware,
+      supportedSoftwareId,
       tags, // Array of tag names (strings)
       gameModeIds,
       supportedVersionIds,
@@ -190,7 +212,7 @@ export async function PATCH(
     }
 
     // Validation
-    if (!title || !description || !categoryId || !supportedSoftware) {
+    if (!title || !description || !categoryId || !supportedSoftwareId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -248,7 +270,7 @@ export async function PATCH(
         installationGuide: installationGuide !== undefined ? installationGuide : existingConfig.installationGuide,
         dependencies: dependencies !== undefined ? dependencies : existingConfig.dependencies,
         categoryId,
-        supportedSoftware,
+        supportedSoftwareId,
         isPremium: isPremium || false,
         price: isPremium ? price : null,
         imageUrl: imageUrl !== undefined ? imageUrl : existingConfig.imageUrl,
@@ -278,7 +300,15 @@ export async function PATCH(
         category: true,
         tags: true,
         gameModes: true,
-        supportedVersions: true
+        supportedVersions: true,
+        supportedSoftware: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            icon: true
+          }
+        }
       }
     });
 

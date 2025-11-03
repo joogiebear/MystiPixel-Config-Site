@@ -88,7 +88,8 @@ model Config {
   imageUrl           String?  @db.LongText
   category           Category @relation(fields: [categoryId], references: [id])
   categoryId         String
-  supportedSoftware  SupportedSoftware
+  supportedSoftware  SupportedSoftware @relation(fields: [supportedSoftwareId], references: [id])
+  supportedSoftwareId String
   isPremium          Boolean  @default(false)
   price              Float?
   downloads          Int      @default(0)
@@ -111,6 +112,7 @@ model Config {
 
   @@index([categoryId])
   @@index([authorId])
+  @@index([supportedSoftwareId])
 }
 
 model ConfigVersion {
@@ -226,16 +228,12 @@ model Favorite {
   @@index([userId])
 }
 
-enum SupportedSoftware {
-  BUKKIT
-  SPIGOT
-  PAPER
-  SPONGE
-  BUNGEE
-  FOLIA
-  VELOCITY
-  MINESTOM
-  PURPUR
-  MOHIST
-  ARCLIGHT
+model SupportedSoftware {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  configs     Config[]
+  createdAt   DateTime @default(now())
 }

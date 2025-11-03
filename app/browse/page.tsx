@@ -22,7 +22,12 @@ interface Config {
     slug: string
     icon: string | null
   }
-  supportedSoftware: string
+  supportedSoftware: {
+    id: string
+    name: string
+    slug: string
+    icon: string | null
+  }
   isPremium: boolean
   price: number | null
   downloads: number
@@ -53,6 +58,13 @@ interface SupportedVersion {
   version: string
 }
 
+interface SupportedSoftware {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+}
+
 interface PaginationData {
   page: number
   limit: number
@@ -80,24 +92,27 @@ export default function BrowsePage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
   const [supportedVersions, setSupportedVersions] = useState<SupportedVersion[]>([])
+  const [supportedSoftwareList, setSupportedSoftwareList] = useState<SupportedSoftware[]>([])
 
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedGameModes, setSelectedGameModes] = useState<string[]>([])
   const [selectedSupportedVersions, setSelectedSupportedVersions] = useState<string[]>([])
 
-  // Fetch categories, tags, game modes, and supported versions
+  // Fetch categories, tags, game modes, supported versions, and supported software
   useEffect(() => {
     Promise.all([
       fetch('/api/categories').then(res => res.json()),
       fetch('/api/tags').then(res => res.json()),
       fetch('/api/game-modes').then(res => res.json()),
-      fetch('/api/supported-versions').then(res => res.json())
+      fetch('/api/supported-versions').then(res => res.json()),
+      fetch('/api/supported-software').then(res => res.json())
     ])
-      .then(([categoriesData, tagsData, gameModesData, versionsData]) => {
+      .then(([categoriesData, tagsData, gameModesData, versionsData, softwareData]) => {
         setCategories(categoriesData.categories || [])
         setTags(tagsData.tags || [])
         setGameModes(gameModesData.gameModes || [])
         setSupportedVersions(versionsData.versions || [])
+        setSupportedSoftwareList(softwareData.supportedSoftware || [])
       })
       .catch(err => console.error('Failed to load data:', err))
   }, [])
@@ -115,7 +130,7 @@ export default function BrowsePage() {
       })
 
       if (searchQuery) params.append('search', searchQuery)
-      if (selectedSupportedSoftware !== 'all') params.append('supportedSoftware', selectedSupportedSoftware.toUpperCase())
+      if (selectedSupportedSoftware !== 'all') params.append('supportedSoftware', selectedSupportedSoftware)
       if (selectedCategory !== 'all') params.append('category', selectedCategory)
       if (selectedTags.length > 0) params.append('tags', selectedTags.join(','))
       if (selectedGameModes.length > 0) params.append('gameModes', selectedGameModes.join(','))
@@ -143,8 +158,6 @@ export default function BrowsePage() {
 
     return () => clearTimeout(timer)
   }, [searchQuery, selectedSupportedSoftware, selectedCategory, sortBy, currentPage, selectedTags, selectedGameModes, selectedSupportedVersions])
-
-  const supportedSoftwareOptions = ['All', 'Bukkit', 'Spigot', 'Paper', 'Sponge', 'Bungee', 'Folia', 'Velocity', 'Minestom', 'Purpur', 'Mohist', 'Arclight']
 
   // Get top 10 popular tags
   const popularTags = tags.slice(0, 10).filter(tag => tag.usageCount && tag.usageCount > 0)
@@ -221,9 +234,10 @@ export default function BrowsePage() {
                 }}
                 className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
               >
-                {supportedSoftwareOptions.map((software) => (
-                  <option key={software} value={software.toLowerCase()}>
-                    {software}
+                <option value="all">All</option>
+                {supportedSoftwareList.map((software) => (
+                  <option key={software.id} value={software.slug}>
+                    {software.icon && `${software.icon} `}{software.name}
                   </option>
                 ))}
               </select>
@@ -491,7 +505,7 @@ export default function BrowsePage() {
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="primary">{config.supportedSoftware}</Badge>
+                  <Badge variant="primary">{config.supportedSoftware.icon && `${config.supportedSoftware.icon} `}{config.supportedSoftware.name}</Badge>
                   {config.supportedVersions && config.supportedVersions.slice(0, 2).map((version) => (
                     <Badge key={version.id} variant="secondary">{version.version}</Badge>
                   ))}

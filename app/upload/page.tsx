@@ -33,6 +33,13 @@ interface SupportedVersion {
   version: string
 }
 
+interface SupportedSoftware {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+}
+
 export default function UploadPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
@@ -40,6 +47,7 @@ export default function UploadPage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
   const [supportedVersions, setSupportedVersions] = useState<SupportedVersion[]>([])
+  const [supportedSoftwareList, setSupportedSoftwareList] = useState<SupportedSoftware[]>([])
   const [loading, setLoading] = useState(false)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +56,7 @@ export default function UploadPage() {
     title: '',
     description: '',
     categoryId: '',
-    supportedSoftware: '',
+    supportedSoftwareId: '',
     isPremium: false,
     price: '',
     content: '', // Additional information
@@ -67,8 +75,6 @@ export default function UploadPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
-
-  const supportedSoftwareOptions = ['BUKKIT', 'SPIGOT', 'PAPER', 'SPONGE', 'BUNGEE', 'FOLIA', 'VELOCITY', 'MINESTOM', 'PURPUR', 'MOHIST', 'ARCLIGHT']
 
   // Tag handling functions
   const addTag = (tagName: string) => {
@@ -137,19 +143,21 @@ export default function UploadPage() {
     }
   }, [status, router])
 
-  // Fetch categories, tags, game modes, and supported versions
+  // Fetch categories, tags, game modes, supported versions, and supported software
   useEffect(() => {
     Promise.all([
       fetch('/api/categories').then(res => res.json()),
       fetch('/api/tags').then(res => res.json()),
       fetch('/api/game-modes').then(res => res.json()),
-      fetch('/api/supported-versions').then(res => res.json())
+      fetch('/api/supported-versions').then(res => res.json()),
+      fetch('/api/supported-software').then(res => res.json())
     ])
-      .then(([categoriesData, tagsData, gameModesData, versionsData]) => {
+      .then(([categoriesData, tagsData, gameModesData, versionsData, softwareData]) => {
         setCategories(categoriesData.categories || [])
         setTags(tagsData.tags || [])
         setGameModes(gameModesData.gameModes || [])
         setSupportedVersions(versionsData.versions || [])
+        setSupportedSoftwareList(softwareData.supportedSoftware || [])
       })
       .catch(err => console.error('Failed to load data:', err))
   }, [])
@@ -227,7 +235,7 @@ export default function UploadPage() {
         installationGuide: formData.installationGuide || null,
         dependencies: formData.dependencies || null,
         categoryId: formData.categoryId,
-        supportedSoftware: formData.supportedSoftware,
+        supportedSoftwareId: formData.supportedSoftwareId,
         tags: selectedTags, // Send tag names, API will auto-create if needed
         gameModeIds: selectedGameModeIds,
         supportedVersionIds: selectedSupportedVersionIds,
@@ -356,14 +364,14 @@ export default function UploadPage() {
                     </label>
                     <select
                       required
-                      value={formData.supportedSoftware}
-                      onChange={(e) => setFormData({ ...formData, supportedSoftware: e.target.value })}
+                      value={formData.supportedSoftwareId}
+                      onChange={(e) => setFormData({ ...formData, supportedSoftwareId: e.target.value })}
                       className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
                     >
                       <option value="">Select supported software</option>
-                      {supportedSoftwareOptions.map((software) => (
-                        <option key={software} value={software}>
-                          {software.charAt(0) + software.slice(1).toLowerCase()}
+                      {supportedSoftwareList.map((software) => (
+                        <option key={software.id} value={software.id}>
+                          {software.icon && `${software.icon} `}{software.name}
                         </option>
                       ))}
                     </select>

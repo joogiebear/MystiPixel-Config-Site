@@ -30,6 +30,15 @@ interface SupportedVersion {
   _count: { configs: number }
 }
 
+interface SupportedSoftware {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  icon: string | null
+  _count: { configs: number }
+}
+
 interface Tag {
   id: string
   name: string
@@ -37,7 +46,7 @@ interface Tag {
   _count: { configs: number }
 }
 
-type TabType = 'categories' | 'game-modes' | 'versions' | 'tags'
+type TabType = 'categories' | 'game-modes' | 'software' | 'versions' | 'tags'
 
 export default function AdminPage() {
   const { data: session, status } = useSession()
@@ -46,6 +55,7 @@ export default function AdminPage() {
 
   const [categories, setCategories] = useState<Category[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
+  const [supportedSoftware, setSupportedSoftware] = useState<SupportedSoftware[]>([])
   const [versions, setVersions] = useState<SupportedVersion[]>([])
   const [tags, setTags] = useState<Tag[]>([])
 
@@ -78,6 +88,7 @@ export default function AdminPage() {
     await Promise.all([
       fetchCategories(),
       fetchGameModes(),
+      fetchSupportedSoftware(),
       fetchVersions(),
       fetchTags()
     ])
@@ -106,6 +117,18 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Error fetching game modes:', error)
+    }
+  }
+
+  const fetchSupportedSoftware = async () => {
+    try {
+      const res = await fetch('/api/admin/supported-software')
+      if (res.ok) {
+        const data = await res.json()
+        setSupportedSoftware(data.software || [])
+      }
+    } catch (error) {
+      console.error('Error fetching supported software:', error)
     }
   }
 
@@ -148,6 +171,10 @@ export default function AdminPage() {
         break
       case 'game-modes':
         url = editingItem ? `/api/admin/game-modes/${editingItem.id}` : '/api/admin/game-modes'
+        body = { name: formData.name, slug: formData.slug, description: formData.description, icon: formData.icon }
+        break
+      case 'software':
+        url = editingItem ? `/api/admin/supported-software/${editingItem.id}` : '/api/admin/supported-software'
         body = { name: formData.name, slug: formData.slug, description: formData.description, icon: formData.icon }
         break
       case 'versions':
@@ -206,6 +233,7 @@ export default function AdminPage() {
     switch (activeTab) {
       case 'categories': url = `/api/admin/categories/${id}`; break
       case 'game-modes': url = `/api/admin/game-modes/${id}`; break
+      case 'software': url = `/api/admin/supported-software/${id}`; break
       case 'versions': url = `/api/admin/supported-versions/${id}`; break
       case 'tags': url = `/api/admin/tags/${id}`; break
     }
@@ -251,6 +279,7 @@ export default function AdminPage() {
     switch (activeTab) {
       case 'categories': items = categories; break
       case 'game-modes': items = gameModes; break
+      case 'software': items = supportedSoftware; break
       case 'versions': items = versions; break
       case 'tags': items = tags; break
     }
@@ -269,7 +298,7 @@ export default function AdminPage() {
         className="flex items-center justify-between p-4 bg-[var(--surface-light)] rounded-lg"
       >
         <div className="flex items-center gap-4">
-          {(activeTab === 'categories' || activeTab === 'game-modes') && (
+          {(activeTab === 'categories' || activeTab === 'game-modes' || activeTab === 'software') && (
             <div className="text-3xl">{item.icon || '📦'}</div>
           )}
           <div>
@@ -331,6 +360,7 @@ export default function AdminPage() {
             {[
               { id: 'categories', label: '📁 Categories' },
               { id: 'game-modes', label: '🎮 Game Modes' },
+              { id: 'software', label: '🔧 Supported Software' },
               { id: 'versions', label: '📦 Supported Versions' },
               { id: 'tags', label: '🏷️ Tags' }
             ].map((tab) => (
@@ -356,7 +386,7 @@ export default function AdminPage() {
               {activeTab.replace('-', ' ')}
             </h2>
             <Button variant="primary" onClick={() => setShowModal(true)}>
-              Add {activeTab === 'versions' ? 'Version' : activeTab.slice(0, -1).replace('-', ' ')}
+              Add {activeTab === 'versions' ? 'Version' : activeTab === 'software' ? 'Software' : activeTab.slice(0, -1).replace('-', ' ')}
             </Button>
           </div>
 
@@ -370,7 +400,7 @@ export default function AdminPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md">
               <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">
-                {editingItem ? 'Edit' : 'Add'} {activeTab === 'versions' ? 'Supported Version' : activeTab.slice(0, -1).replace('-', ' ')}
+                {editingItem ? 'Edit' : 'Add'} {activeTab === 'versions' ? 'Supported Version' : activeTab === 'software' ? 'Supported Software' : activeTab.slice(0, -1).replace('-', ' ')}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">

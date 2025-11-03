@@ -31,6 +31,13 @@ interface SupportedVersion {
   version: string
 }
 
+interface SupportedSoftware {
+  id: string
+  name: string
+  slug: string
+  icon: string | null
+}
+
 export default function EditConfigPage() {
   const params = useParams()
   const router = useRouter()
@@ -47,7 +54,7 @@ export default function EditConfigPage() {
   const [installationGuide, setInstallationGuide] = useState('')
   const [dependencies, setDependencies] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [supportedSoftware, setSupportedSoftware] = useState('FORGE')
+  const [supportedSoftwareId, setSupportedSoftwareId] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedGameModes, setSelectedGameModes] = useState<string[]>([])
   const [selectedSupportedVersions, setSelectedSupportedVersions] = useState<string[]>([])
@@ -66,6 +73,7 @@ export default function EditConfigPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [gameModes, setGameModes] = useState<GameMode[]>([])
   const [supportedVersions, setSupportedVersions] = useState<SupportedVersion[]>([])
+  const [supportedSoftwareList, setSupportedSoftwareList] = useState<SupportedSoftware[]>([])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -78,11 +86,12 @@ export default function EditConfigPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [configRes, categoriesRes, gameModesRes, versionsRes] = await Promise.all([
+        const [configRes, categoriesRes, gameModesRes, versionsRes, softwareRes] = await Promise.all([
           fetch(`/api/configs/${params.id}`),
           fetch('/api/categories'),
           fetch('/api/game-modes'),
-          fetch('/api/supported-versions')
+          fetch('/api/supported-versions'),
+          fetch('/api/supported-software')
         ])
 
         if (!configRes.ok) {
@@ -94,6 +103,7 @@ export default function EditConfigPage() {
         const categoriesData = await categoriesRes.json()
         const gameModesData = await gameModesRes.json()
         const versionsData = await versionsRes.json()
+        const softwareData = await softwareRes.json()
 
         // Check authorization
         if (config.author.id !== session?.user?.id) {
@@ -113,7 +123,7 @@ export default function EditConfigPage() {
         setInstallationGuide(config.installationGuide || '')
         setDependencies(config.dependencies || '')
         setCategoryId(config.category.id)
-        setSupportedSoftware(config.supportedSoftware)
+        setSupportedSoftwareId(config.supportedSoftware?.id || '')
         setSelectedTags(config.tags ? config.tags.map((t: Tag) => t.name) : [])
         setSelectedGameModes(config.gameModes ? config.gameModes.map((gm: GameMode) => gm.id) : [])
         setSelectedSupportedVersions(config.supportedVersions ? config.supportedVersions.map((v: SupportedVersion) => v.id) : [])
@@ -128,6 +138,7 @@ export default function EditConfigPage() {
         setCategories(categoriesData.categories || [])
         setGameModes(gameModesData.gameModes || [])
         setSupportedVersions(versionsData.versions || [])
+        setSupportedSoftwareList(softwareData.supportedSoftware || [])
 
         setLoading(false)
       } catch (err: any) {
@@ -250,7 +261,7 @@ export default function EditConfigPage() {
         installationGuide: installationGuide.trim() || null,
         dependencies: dependencies.trim() || null,
         categoryId,
-        supportedSoftware,
+        supportedSoftwareId,
         tags: selectedTags,
         gameModeIds: selectedGameModes,
         supportedVersionIds: selectedSupportedVersions,
@@ -373,22 +384,17 @@ export default function EditConfigPage() {
                     Supported Software *
                   </label>
                   <select
-                    value={supportedSoftware}
-                    onChange={(e) => setSupportedSoftware(e.target.value)}
+                    value={supportedSoftwareId}
+                    onChange={(e) => setSupportedSoftwareId(e.target.value)}
                     className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
                     required
                   >
-                    <option value="BUKKIT">Bukkit</option>
-                    <option value="SPIGOT">Spigot</option>
-                    <option value="PAPER">Paper</option>
-                    <option value="SPONGE">Sponge</option>
-                    <option value="BUNGEE">BungeeCord</option>
-                    <option value="FOLIA">Folia</option>
-                    <option value="VELOCITY">Velocity</option>
-                    <option value="MINESTOM">Minestom</option>
-                    <option value="PURPUR">Purpur</option>
-                    <option value="MOHIST">Mohist</option>
-                    <option value="ARCLIGHT">Arclight</option>
+                    <option value="">Select supported software</option>
+                    {supportedSoftwareList.map((software) => (
+                      <option key={software.id} value={software.id}>
+                        {software.icon && `${software.icon} `}{software.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
