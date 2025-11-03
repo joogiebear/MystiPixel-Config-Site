@@ -331,7 +331,7 @@ export default function AdminPage() {
             {[
               { id: 'categories', label: '📁 Categories' },
               { id: 'game-modes', label: '🎮 Game Modes' },
-              { id: 'versions', label: '📦 MC Versions' },
+              { id: 'versions', label: '📦 Supported Versions' },
               { id: 'tags', label: '🏷️ Tags' }
             ].map((tab) => (
               <button
@@ -370,7 +370,7 @@ export default function AdminPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md">
               <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">
-                {editingItem ? 'Edit' : 'Add'} {activeTab === 'versions' ? 'Minecraft Version' : activeTab.slice(0, -1).replace('-', ' ')}
+                {editingItem ? 'Edit' : 'Add'} {activeTab === 'versions' ? 'Supported Version' : activeTab.slice(0, -1).replace('-', ' ')}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -385,7 +385,7 @@ export default function AdminPage() {
                       value={formData.version}
                       onChange={(e) => setFormData({ ...formData, version: e.target.value })}
                       className="w-full bg-[var(--surface-light)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none"
-                      placeholder="1.20.4"
+                      placeholder="e.g., 1.21.9"
                     />
                   </div>
                 ) : (
