@@ -77,6 +77,11 @@ export async function GET(
             createdAt: 'desc'
           }
         },
+        versions: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
         _count: {
           select: {
             downloadRecords: true,

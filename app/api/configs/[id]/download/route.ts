@@ -107,14 +107,76 @@ export async function POST(
   }
 }
 
-// GET endpoint to get download URL (for premium configs after payment)
+// GET endpoint for version-specific downloads
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const searchParams = request.nextUrl.searchParams;
+    const versionId = searchParams.get('versionId');
 
+    // If versionId is provided, download specific version
+    if (versionId) {
+      const version = await prisma.configVersion.findUnique({
+        where: { id: versionId },
+        include: {
+          config: {
+            select: {
+              id: true,
+              title: true,
+              isPremium: true
+            }
+          }
+        }
+      });
+
+      if (!version) {
+        return NextResponse.json(
+          { error: 'Version not found' },
+          { status: 404 }
+        );
+      }
+
+      if (!version.fileUrl) {
+        return NextResponse.json(
+          { error: 'No file available for this version' },
+          { status: 404 }
+        );
+      }
+
+      // Increment version download counter
+      await prisma.configVersion.update({
+        where: { id: versionId },
+        data: { downloads: { increment: 1 } }
+      });
+
+      // Read and return file
+      const filePath = path.join(process.cwd(), version.fileUrl);
+      try {
+        const fileBuffer = await readFile(filePath);
+        const filename = path.basename(version.fileUrl);
+        const sanitizedTitle = version.config.title.replace(/[^a-zA-Z0-9-]/g, '_');
+        const downloadFilename = `${sanitizedTitle}_v${version.version}${path.extname(filename)}`;
+
+        return new NextResponse(fileBuffer, {
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'Content-Disposition': `attachment; filename="${downloadFilename}"`,
+            'Content-Length': fileBuffer.length.toString()
+          }
+        });
+      } catch (fileError) {
+        console.error('Error reading version file:', fileError);
+        return NextResponse.json(
+          { error: 'Version file not found on server' },
+          { status: 404 }
+        );
+      }
+    }
+
+    // Default: download latest version or main file
     const config = await prisma.config.findUnique({
       where: { id },
       select: {
@@ -132,8 +194,6 @@ export async function GET(
       );
     }
 
-    // TODO: Add purchase verification for premium configs
-
     return NextResponse.json({
       downloadUrl: `/api/configs/${id}/download`,
       fileName: config.title,
@@ -141,9 +201,9 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error getting download info:', error);
+    console.error('Error processing download:', error);
     return NextResponse.json(
-      { error: 'Failed to get download info' },
+      { error: 'Failed to process download' },
       { status: 500 }
     );
   }

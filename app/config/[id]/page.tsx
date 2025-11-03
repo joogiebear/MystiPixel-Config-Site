@@ -86,6 +86,14 @@ interface ConfigData {
   favoriteCount: number
   commentCount: number
   fileUrl: string | null
+  versions: Array<{
+    id: string
+    version: string
+    changelog: string
+    fileUrl: string
+    downloads: number
+    createdAt: string
+  }>
   createdAt: string
   updatedAt: string
 }
@@ -552,20 +560,49 @@ export default function ConfigDetailPage() {
 
               {activeTab === 'changelog' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Changelog</h2>
-                  <div className="space-y-4">
-                    <div className="border-l-2 border-[var(--primary)] pl-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="primary">Latest</Badge>
-                        <span className="text-sm text-[var(--text-secondary)]">
-                          {formatDistanceToNow(new Date(config.updatedAt), { addSuffix: true })}
-                        </span>
-                      </div>
-                      <p className="text-[var(--text-secondary)]">
-                        Current version - Supports {config.minecraftVersions && config.minecraftVersions.map(v => v.version).join(', ')}
+                  <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Version History</h2>
+
+                  {config.versions && config.versions.length > 0 ? (
+                    <div className="space-y-4">
+                      {config.versions.map((version, index) => (
+                        <div key={version.id} className="border-l-2 border-[var(--primary)] pl-4 pb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            {index === 0 && <Badge variant="primary">Latest</Badge>}
+                            <span className="font-semibold text-[var(--text-primary)]">Version {version.version}</span>
+                            <span className="text-sm text-[var(--text-secondary)]">
+                              {formatDistanceToNow(new Date(version.createdAt), { addSuffix: true })}
+                            </span>
+                          </div>
+                          {version.changelog ? (
+                            <div className="bg-[var(--surface-light)] p-3 rounded-lg mb-2">
+                              <pre className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap font-sans">
+                                {version.changelog}
+                              </pre>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-[var(--text-muted)] mb-2">No changelog provided</p>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)]">
+                            <span>📥 {version.downloads} downloads</span>
+                            <a
+                              href={`/api/configs/${config.id}/download?versionId=${version.id}`}
+                              className="text-[var(--primary)] hover:underline"
+                            >
+                              Download this version
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="text-6xl mb-4">📋</div>
+                      <p className="text-[var(--text-secondary)] mb-2">No version history yet</p>
+                      <p className="text-sm text-[var(--text-muted)]">
+                        The author hasn't uploaded any versions with changelogs
                       </p>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 

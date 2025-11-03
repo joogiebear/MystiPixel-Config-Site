@@ -639,6 +639,28 @@ export default function EditConfigPage() {
             </div>
           </Card>
 
+          {/* Version Management */}
+          <Card>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Version Management</h2>
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
+              Upload a new version of your config. This will be added to the version history.
+            </p>
+
+            <div className="bg-[var(--surface-light)] p-4 rounded-lg mb-4">
+              <p className="text-sm text-[var(--text-muted)] mb-2">
+                💡 <strong>Tip:</strong> When you upload a new version, users who downloaded previous versions can see what's changed and download the update.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push(`/config/${params.id}/versions`)}
+            >
+              📦 Manage Versions
+            </Button>
+          </Card>
+
           {/* Premium Settings */}
           <Card>
             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Premium Settings</h2>
